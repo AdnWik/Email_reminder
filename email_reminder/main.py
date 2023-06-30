@@ -2,12 +2,13 @@ import sqlite3
 
 
 def create_connection():
-    with sqlite3.connect('base.db') as connection:
-        cursor = connection.cursor()
-    return cursor
+    with sqlite3.connect('base.db') as conn:
+        cur = conn.cursor()
+    return cur
 
-def get_all_books(cursor):
-    cursor.execute('select * from books')
+
+def get_all_books(cur):
+    cur.execute("select * from books")
     data = []
 
     for book in cursor.fetchall():
