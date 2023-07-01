@@ -14,4 +14,4 @@ class Rental:
         self.returned = False
 
     def send_reminder(self):
-        logging.info(f'Reminder send')
+        logging.info('Reminder send for {}'.format(self.user.name))
