@@ -1,16 +1,32 @@
 from bookcase import Bookcase
-import sqlite3
+from rental import Rental
+from book import Book
+from sqlite3 import OperationalError
 
 
 bookcase = Bookcase()
-try:
-    bookcase.get_all_books()
-except sqlite3.OperationalError:
-    pass
 
 try:
+    bookcase.get_all_books()
     bookcase.get_all_users()
-except sqlite3.OperationalError:
+    Rental.get_all_rentals()
+except OperationalError:
     pass
-print(bookcase.books)
-print(bookcase.users)
+
+
+print('New rental'.center(50, '-'))
+print('Chose user')
+for No, user in enumerate(bookcase.users, 1):
+    print(f'{No} - {user.name}')
+
+user_index = int(input('>>> '))
+selected_user = bookcase.users[user_index - 1].user_id
+
+print('\n')
+print('Chose book to rent')
+for No, book in enumerate(bookcase.books, 1):
+    print(f'{No} - {book.title}')
+book_index = int(input('>>> '))
+selected_book = bookcase.books[book_index - 1].book_id
+
+Rental.add_rental(selected_user, selected_book)
