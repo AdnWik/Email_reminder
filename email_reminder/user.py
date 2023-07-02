@@ -1,3 +1,5 @@
+from db_conn import create_connection
+
 class User:
 
     def __init__(self, user_id, first_name, last_name, email_address) -> None:
@@ -12,3 +14,8 @@ class User:
 
     def __str__(self) -> str:
         return f'{self.name} -> {self.email_address}'
+    
+    @staticmethod
+    def add_user(first_name, last_name, email_address):
+        cur = create_connection()
+        cur.execute("insert into users values(?,?,?)", (first_name, last_name, email_address))
