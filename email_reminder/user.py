@@ -1,4 +1,5 @@
-from db_conn import create_connection, insert_into_database
+from db_conn import insert_into_database
+
 
 class User:
 
