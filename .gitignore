@@ -1,11 +1,6 @@
 /Email_reminder.code-workspace
 /email_reminder_venv
-/email_reminder/test.txt
 /email_reminder/tests_file
 /email_reminder/__pycache__
-<<<<<<< HEAD
 */base.db
-=======
-/email_reminder/base.db
->>>>>>> b757b89
 base.db
