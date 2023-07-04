@@ -33,7 +33,7 @@ class Rental:
                 Rental(rental_id, user_id, book_id, rental_date, return_date, returned)
 
     @staticmethod
-    def add_rental(user_id, book_id, rental_date=datetime.now(), days_of_rental=14, returned=False):
+    def add_rental(conn, user_id, book_id, rental_date=datetime.now(), days_of_rental=14, returned=False):
 
         return_date = (rental_date + timedelta(days=days_of_rental)).strftime('%Y-%m-%d %H:%M:%S')
         rental_date_formatted = rental_date.strftime('%Y-%m-%d %H:%M:%S')
@@ -46,7 +46,7 @@ class Rental:
         data = [(user_id, book_id, rental_date_formatted, return_date, ret), ]
         query = """insert into rentals (user_id, book_id, rental_date, return_date, returned) values (?, ?, ?, ?, ?)"""
 
-        insert_into_database(query, data)
+        insert_into_database(conn, query, data)
 
     def send_reminder(self):
         logging.info('Reminder send for {}'.format(self.user.name))
