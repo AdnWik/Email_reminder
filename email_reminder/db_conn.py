@@ -1,16 +1,26 @@
 import sqlite3
 
 
-DATABASE_NAME = 'base.db'
-
 def create_connection():
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        cur = conn.cursor()
-    return cur
+    database_name = 'base.db'
+    with sqlite3.connect(database_name) as conn:
+        return conn
 
 
-def insert_into_database(query, data):
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        cur = conn.cursor()
-        cur.executemany(query, data)
-        conn.commit()
+def execute_on_database(conn, script):
+    cur = conn.cursor()
+    cur.executescript(script)
+
+
+def insert_into_database(conn, query, data):
+    cur = conn.cursor()
+    cur.executemany(query, data)
+    conn.commit()
+
+
+def get_data_from_database(conn, query):
+    cur = conn.cursor()
+    cur.execute(query)
+
+    data = cur.fetchall()
+    return data
