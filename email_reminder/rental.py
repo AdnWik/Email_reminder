@@ -1,5 +1,4 @@
-from db_conn import create_connection, insert_into_database
-from bookcase import Bookcase
+from db_conn import insert_into_database
 from datetime import datetime, timedelta
 import logging
 
