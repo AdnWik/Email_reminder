@@ -22,15 +22,6 @@ class Rental:
     def __str__(self) -> str:
         return f'{self.user_id} -> {self.book_id} Return date: {self.return_date} Returned: {self.returned}'
 
-    @staticmethod
-    def get_all_rentals():
-        cur = create_connection()
-        cur.execute("select * from rentals")
-        response = cur.fetchall()
-        if len(response) > 0:
-            for rental in cur.fetchall():
-                rental_id, user_id, book_id, rental_date, return_date, returned = rental
-                Rental(rental_id, user_id, book_id, rental_date, return_date, returned)
 
     @staticmethod
     def add_rental(conn, user_id, book_id, rental_date=datetime.now(), days_of_rental=14, returned=False):

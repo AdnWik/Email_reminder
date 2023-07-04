@@ -1,16 +1,16 @@
+from db_conn import create_connection
 from bookcase import Bookcase
 from rental import Rental
 from book import Book
 from user import User
 from sqlite3 import OperationalError
 
-
+conn = create_connection()
 bookcase = Bookcase()
 
 try:
     bookcase.get_all_books()
     bookcase.get_all_users()
-    Rental.get_all_rentals()
 except OperationalError:
     pass
 
@@ -30,4 +30,4 @@ for No, book in enumerate(bookcase.books, 1):
 book_index = int(input('>>> '))
 selected_book = bookcase.books[book_index - 1].book_id
 
-Rental.add_rental(selected_user, selected_book)
+Rental.add_rental(conn, selected_user, selected_book)
