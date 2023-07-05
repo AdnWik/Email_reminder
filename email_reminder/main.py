@@ -1,8 +1,6 @@
 from db_conn import create_connection
 from bookcase import Bookcase
 from rental import Rental
-from book import Book
-from user import User
 from sqlite3 import OperationalError
 from datetime import datetime
 
