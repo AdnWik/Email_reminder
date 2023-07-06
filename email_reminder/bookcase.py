@@ -14,16 +14,20 @@ class Bookcase:
 
     def get_all_books(self, conn) -> None:
         query = "select * from books"
-        data = get_data_from_database(conn, query)
 
-        for book in data:
-            book_id, title, author, created_at = book
-            self.books.append(Book(
-                book_id,
-                title,
-                author,
-                created_at
-            ))
+        try:
+            data = get_data_from_database(conn, query)
+            self.books = []
+            for book in data:
+                book_id, title, author, created_at = book
+                self.books.append(Book(
+                    book_id,
+                    title,
+                    author,
+                    created_at
+                ))
+        except OperationalError:
+            pass
 
     def get_all_users(self, conn) -> None:
         query = "select * from users"
@@ -43,18 +47,21 @@ class Bookcase:
 
     def get_all_rentals(self, conn) -> None:
         query = "select * from rentals"
-        data = get_data_from_database(conn, query)
-
-        for rental in data:
-            rental_id, user_id, book_id, rental_date, return_date, returned = rental
-            self.rentals.append(Rental(
-                rental_id,
-                user_id,
-                book_id,
-                rental_date,
-                return_date,
-                returned
-            ))
+        try:
+            data = get_data_from_database(conn, query)
+            self.rentals = []
+            for rental in data:
+                rental_id, user_id, book_id, rental_date, return_date, returned = rental
+                self.rentals.append(Rental(
+                    rental_id,
+                    user_id,
+                    book_id,
+                    rental_date,
+                    return_date,
+                    returned
+                ))
+        except OperationalError:
+            pass
 
     def get_available_books(self, conn):
         self.books = []
@@ -75,3 +82,15 @@ class Bookcase:
                 author,
                 created_at
             ))
+
+    def show_all_users(self):
+        for user in self.users:
+            print(user)
+
+    def show_all_books(self):
+        for book in self.books:
+            print(book)
+
+    def show_all_rentals(self):
+        for rental in self.rentals:
+            print(rental)

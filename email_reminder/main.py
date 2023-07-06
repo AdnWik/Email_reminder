@@ -7,8 +7,8 @@ from sqlite3 import OperationalError
 from datetime import datetime
 
 
-def new_rental():
-    bookcase.get_available_books()
+def new_rental(conn):
+    bookcase.get_available_books(conn)
     print('New rental'.center(50, '-'))
     print('Chose user')
     for No, user in enumerate(bookcase.users, 1):
@@ -38,13 +38,15 @@ conn = create_connection()
 bookcase = Bookcase()
 
 try:
-    bookcase.get_all_books()
-    bookcase.get_all_users()
+    bookcase.get_all_books(conn)
+    bookcase.get_all_users(conn)
+    bookcase.get_all_rentals(conn)
 except OperationalError:
     pass
 
-print(' EMAIL REMINDER '.center(50,'='))
+print(' EMAIL REMINDER '.center(50, '='))
 while True:
+    print('-'*50)
     print('What do you want to do?')
     print("""
     1 - Users
@@ -61,11 +63,11 @@ while True:
         1 - Show all users
         2 - Add user
         3 - delete user
-
-        Other - Exit""")
+        """)
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL USERS
+            bookcase.show_all_users()
             pass
 
         elif user_choice == '2':
@@ -77,9 +79,6 @@ while True:
             # DELETE USER
             pass
 
-        else:
-            break
-
     elif user_choice == '2':
         # BOOKS
         print(' BOOKS MENU '.center(50, '='))
@@ -88,12 +87,11 @@ while True:
         1 - Show all books
         2 - Add book
         3 - delete book
-
-        Other - Exit""")
+        """)
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL BOOKS
-            pass
+            bookcase.show_all_books()
 
         elif user_choice == '2':
             # ADD BOOK
@@ -104,8 +102,6 @@ while True:
             # DELETE BOOK
             pass
 
-        else:
-            break
 
     elif user_choice == '3':
         # RENTALS
@@ -115,23 +111,19 @@ while True:
         1 - Show all rentals
         2 - Add rental
         3 - Check returns
-
-        Other - Exit""")
+        """)
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL RENTALS
-            pass
+            bookcase.show_all_rentals()
 
         elif user_choice == '2':
             # ADD RENTAL
-            new_rental()
+            new_rental(conn)
 
         elif user_choice == '3':
             # CHECK RETURNS
             pass
-
-        else:
-            break
 
     else:
         break
