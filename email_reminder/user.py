@@ -1,4 +1,5 @@
 from db_conn import insert_into_database
+from sqlite3 import OperationalError
 
 
 class User:
@@ -17,7 +18,17 @@ class User:
         return f'{self.name} -> {self.email_address}'
 
     @staticmethod
-    def add_user(conn, first_name, last_name, email_address):
+    def add_user(conn):
+        print('Enter user first_name')
+        first_name = input('>>> ')
+        print('Enter user last_name')
+        last_name = input('>>> ')
+        print('Enter user email_address')
+        email_address = input('>>> ')
+
         query = """insert into users (first_name, last_name, email_address) values(?,?,?)"""
         data = [(first_name, last_name, email_address), ]
-        insert_into_database(conn, query, data)
+        try:
+            insert_into_database(conn, query, data)
+        except OperationalError:
+            pass
