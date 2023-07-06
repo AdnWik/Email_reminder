@@ -1,6 +1,8 @@
 from db_conn import create_connection
 from bookcase import Bookcase
 from rental import Rental
+from user import User
+from book import Book
 from sqlite3 import OperationalError
 from datetime import datetime
 
@@ -45,20 +47,91 @@ print(' EMAIL REMINDER '.center(50,'='))
 while True:
     print('What do you want to do?')
     print("""
-    1 - Add user
-    2 - Add book
-    3 - Add rental
-    4 - Check returns
+    1 - Users
+    2 - Books
+    3 - Rentals
 
     Other - Exit""")
     user_choice = input(">>> ")
     if user_choice == '1':
-        pass
+        # USERS
+        print(' USERS MENU '.center(50, '='))
+        print('What do you want to do?')
+        print("""
+        1 - Show all users
+        2 - Add user
+        3 - delete user
+
+        Other - Exit""")
+        user_choice = input(">>> ")
+        if user_choice == '1':
+            # SHOW ALL USERS
+            pass
+
+        elif user_choice == '2':
+            # ADD USER
+            User.add_user(conn)
+            bookcase.get_all_users(conn)
+
+        elif user_choice == '3':
+            # DELETE USER
+            pass
+
+        else:
+            break
+
     elif user_choice == '2':
-        pass
+        # BOOKS
+        print(' BOOKS MENU '.center(50, '='))
+        print('What do you want to do?')
+        print("""
+        1 - Show all books
+        2 - Add book
+        3 - delete book
+
+        Other - Exit""")
+        user_choice = input(">>> ")
+        if user_choice == '1':
+            # SHOW ALL BOOKS
+            pass
+
+        elif user_choice == '2':
+            # ADD BOOK
+            Book.add_book(conn)
+            bookcase.get_all_books(conn)
+
+        elif user_choice == '3':
+            # DELETE BOOK
+            pass
+
+        else:
+            break
+
     elif user_choice == '3':
-        new_rental()
-    elif user_choice == '4':
-        pass
+        # RENTALS
+        print(' RENTALS MENU '.center(50, '='))
+        print('What do you want to do?')
+        print("""
+        1 - Show all rentals
+        2 - Add rental
+        3 - Check returns
+
+        Other - Exit""")
+        user_choice = input(">>> ")
+        if user_choice == '1':
+            # SHOW ALL RENTALS
+            pass
+
+        elif user_choice == '2':
+            # ADD RENTAL
+            new_rental()
+
+        elif user_choice == '3':
+            # CHECK RETURNS
+            pass
+
+        else:
+            break
+
     else:
         break

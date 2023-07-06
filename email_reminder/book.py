@@ -1,5 +1,6 @@
 from db_conn import insert_into_database
 from datetime import datetime
+from sqlite3 import OperationalError
 
 
 class Book:
@@ -17,9 +18,18 @@ class Book:
         return f'{self.title} - {self.author}'
 
     @staticmethod
-    def add_book(conn, title, author, created_at):
+    def add_book(conn):
         # Date fromat YYYY-MM-DD HH:MM:SS
-        created = created_at
+        print('Enter book title')
+        title = input('>>> ')
+        print('Enter book author')
+        author = input('>>> ')
+        print('Enter book title')
+        release_date = input('>>> ')
+
         query = """insert into books (title, author, created_at) values(?,?,?)"""
-        data = [(title, author, created), ]
-        insert_into_database(conn, query, data)
+        data = [(title, author, release_date), ]
+        try:
+            insert_into_database(conn, query, data)
+        except OperationalError:
+            pass

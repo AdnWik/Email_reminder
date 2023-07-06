@@ -1,7 +1,8 @@
-from db_conn import create_connection, get_data_from_database
+from db_conn import get_data_from_database
 from book import Book
 from user import User
 from rental import Rental
+from sqlite3 import OperationalError
 
 
 class Bookcase:
@@ -11,9 +12,8 @@ class Bookcase:
         self.users = []
         self.rentals = []
 
-    def get_all_books(self) -> None:
+    def get_all_books(self, conn) -> None:
         query = "select * from books"
-        conn = create_connection()
         data = get_data_from_database(conn, query)
 
         for book in data:
@@ -25,23 +25,24 @@ class Bookcase:
                 created_at
             ))
 
-    def get_all_users(self) -> None:
+    def get_all_users(self, conn) -> None:
         query = "select * from users"
-        conn = create_connection()
-        data = get_data_from_database(conn, query)
+        try:
+            data = get_data_from_database(conn, query)
+            self.users = []
+            for user in data:
+                user_id, first_name, last_name, email_address = user
+                self.users.append(User(
+                    user_id,
+                    first_name,
+                    last_name,
+                    email_address
+                ))
+        except OperationalError:
+            pass
 
-        for user in data:
-            user_id, first_name, last_name, email_address = user
-            self.users.append(User(
-                user_id,
-                first_name,
-                last_name,
-                email_address
-            ))
-
-    def get_all_rentals(self) -> None:
+    def get_all_rentals(self, conn) -> None:
         query = "select * from rentals"
-        conn = create_connection()
         data = get_data_from_database(conn, query)
 
         for rental in data:
@@ -55,7 +56,7 @@ class Bookcase:
                 returned
             ))
 
-    def get_available_books(self):
+    def get_available_books(self, conn):
         self.books = []
         query = """SELECT * FROM books
                     EXCEPT
@@ -64,7 +65,6 @@ class Bookcase:
                     LEFT JOIN rentals AS t2
                     ON t1.id = t2.book_id
                     WHERE t2.returned = 0"""
-        conn = create_connection()
         data = get_data_from_database(conn, query)
 
         for book in data:
