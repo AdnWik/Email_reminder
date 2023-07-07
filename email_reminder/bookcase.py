@@ -1,8 +1,10 @@
+from sqlite3 import OperationalError
+from datetime import datetime
 from db_conn import get_data_from_database
 from book import Book
 from user import User
 from rental import Rental
-from sqlite3 import OperationalError
+
 
 
 class Bookcase:
@@ -62,6 +64,60 @@ class Bookcase:
                 ))
         except OperationalError:
             pass
+
+    def new_rental(self, conn):
+        self.get_available_books(conn)
+        print('New rental'.center(50, '-'))
+        print('Chose user')
+        for No, user in enumerate(self.users, 1):
+            print(f'{No} - {user.name}')
+
+        user_index = int(input('>>> '))
+        selected_user = self.users[user_index - 1].user_id
+
+        print('\n')
+        print('Chose book to rent')
+        for No, book in enumerate(self.books, 1):
+            print(f'{No} - {book.title}')
+        book_index = int(input('>>> '))
+        selected_book = self.books[book_index - 1].book_id
+
+        print('\n')
+        print('Enter rent date (YYYY-MM-DD  HH:MM:SS):   (If today press enter)')
+
+        try:
+            user_date = datetime.fromisoformat(input('>>> '))
+            Rental.add_rental(conn, selected_user, selected_book, rental_date=user_date)
+        except ValueError:
+            Rental.add_rental(conn, selected_user, selected_book)
+
+
+    def check_returns(self, conn):
+        query = """SELECT	t3.title,
+                            t3.author,
+                            t2.first_name, 
+                            t2.last_name, 
+                            t2.email_address,
+                            t1.return_date,
+                            STRFTIME('%J',JULIANDAY('now') - JULIANDAY(t1.return_date)) AS delayed_days
+                    FROM rentals AS t1
+                    LEFT JOIN users AS t2 
+                    ON t1.user_id = t2.user_id 
+                    LEFT JOIN books AS t3
+                    ON t1.book_id = t3.id 
+                    WHERE datetime(t1.return_date) < datetime('now')
+                    AND t1.returned = 0"""
+        data = get_data_from_database(conn, query)
+        for record in data:
+            book_title, book_author, user_first_name, user_last_name, user_email, return_date, delayed_days = record
+            delayed_days_formatted = float(delayed_days)
+            print(f'User email: {user_email:<40} Return date: {return_date:<20} Delayed: {delayed_days_formatted:.1f} days')
+
+        delayed_rentals_number = len(data)
+        if delayed_rentals_number > 0:
+            print(f'\nYou have {delayed_rentals_number} delayed rentals')
+            print('Do you want send email reminders? (y/N)')
+            input(">>> ")
 
     def get_available_books(self, conn):
         self.books = []

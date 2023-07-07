@@ -1,37 +1,9 @@
+from sqlite3 import OperationalError
 from db_conn import create_connection
 from bookcase import Bookcase
-from rental import Rental
 from user import User
 from book import Book
-from sqlite3 import OperationalError
-from datetime import datetime
 
-
-def new_rental(conn):
-    bookcase.get_available_books(conn)
-    print('New rental'.center(50, '-'))
-    print('Chose user')
-    for No, user in enumerate(bookcase.users, 1):
-        print(f'{No} - {user.name}')
-
-    user_index = int(input('>>> '))
-    selected_user = bookcase.users[user_index - 1].user_id
-
-    print('\n')
-    print('Chose book to rent')
-    for No, book in enumerate(bookcase.books, 1):
-        print(f'{No} - {book.title}')
-    book_index = int(input('>>> '))
-    selected_book = bookcase.books[book_index - 1].book_id
-
-    print('\n')
-    print('Enter rent date (YYYY-MM-DD  HH:MM:SS):   (If today press enter)')
-
-    try:
-        user_date = datetime.fromisoformat(input('>>> '))
-        Rental.add_rental(conn, selected_user, selected_book, rental_date=user_date)
-    except ValueError:
-        Rental.add_rental(conn, selected_user, selected_book)
 
 
 conn = create_connection()
@@ -110,7 +82,8 @@ while True:
         print("""
         1 - Show all rentals
         2 - Add rental
-        3 - Check returns
+        3 - Update rental
+        4 - Check returns
         """)
         user_choice = input(">>> ")
         if user_choice == '1':
@@ -119,11 +92,15 @@ while True:
 
         elif user_choice == '2':
             # ADD RENTAL
-            new_rental(conn)
+            bookcase.new_rental(conn)
 
         elif user_choice == '3':
-            # CHECK RETURNS
+            # UPDATE RENTAL
             pass
+
+        elif user_choice == '4':
+            # CHECK RETURNS
+            bookcase.check_returns(conn)
 
     else:
         break
