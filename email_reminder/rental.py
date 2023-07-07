@@ -1,6 +1,7 @@
-from db_conn import insert_into_database
 from datetime import datetime, timedelta
 import logging
+from db_conn import insert_into_database
+
 
 class Rental:
 

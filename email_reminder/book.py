@@ -1,6 +1,5 @@
-from db_conn import insert_into_database
-from datetime import datetime
 from sqlite3 import OperationalError
+from db_conn import insert_into_database
 
 
 class Book:
