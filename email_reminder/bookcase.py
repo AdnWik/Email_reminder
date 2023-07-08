@@ -1,6 +1,6 @@
 from sqlite3 import OperationalError
 from datetime import datetime
-from db_conn import get_data_from_database
+from db_conn import get_data_from_database,insert_into_database
 from book import Book
 from user import User
 from rental import Rental
@@ -95,16 +95,16 @@ class Bookcase:
     def check_returns(self, conn):
         query = """SELECT	t3.title,
                             t3.author,
-                            t2.first_name, 
-                            t2.last_name, 
+                            t2.first_name,
+                            t2.last_name,
                             t2.email_address,
                             t1.return_date,
                             STRFTIME('%J',JULIANDAY('now') - JULIANDAY(t1.return_date)) AS delayed_days
                     FROM rentals AS t1
-                    LEFT JOIN users AS t2 
-                    ON t1.user_id = t2.user_id 
+                    LEFT JOIN users AS t2
+                    ON t1.user_id = t2.user_id
                     LEFT JOIN books AS t3
-                    ON t1.book_id = t3.id 
+                    ON t1.book_id = t3.id
                     WHERE datetime(t1.return_date) < datetime('now')
                     AND t1.returned = 0"""
         data = get_data_from_database(conn, query)
@@ -114,7 +114,10 @@ class Bookcase:
             print(f'User email: {user_email:<40} Return date: {return_date:<20} Delayed: {delayed_days_formatted:.1f} days')
 
         delayed_rentals_number = len(data)
-        if delayed_rentals_number > 0:
+        if delayed_rentals_number == 0:
+            print('You have not delayed rentals')
+
+        elif delayed_rentals_number > 0:
             print(f'\nYou have {delayed_rentals_number} delayed rentals')
             print('Do you want send email reminders? (y/N)')
             input(">>> ")
@@ -150,3 +153,25 @@ class Bookcase:
     def show_all_rentals(self):
         for rental in self.rentals:
             print(rental)
+
+    def delete_book(self, conn):
+        self.get_available_books(conn)
+        for no, book in enumerate(self.books, 1):
+            print(f'{no} -> {book.title} {book.author} ')
+
+        print('\nChose book to delete')
+        user_choice = int(input('>>> '))
+        for no, book in enumerate(self.books, 1):
+            if user_choice == no:
+                book_id = str(book.book_id)
+
+        query = """DELETE FROM books
+                   WHERE id = ?"""
+        data = [(book_id), ]
+        try:
+            insert_into_database(conn, query, data)
+        except OperationalError:
+            pass
+
+    def delete_user(self, conn):
+        pass
