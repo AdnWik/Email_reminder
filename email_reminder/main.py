@@ -21,21 +21,21 @@ while True:
     print('-'*50)
     print('What do you want to do?')
     print("""
-    1 - Users
-    2 - Books
-    3 - Rentals
+1 - Users
+2 - Books
+3 - Rentals
 
-    Other - Exit""")
+Other - Exit""")
     user_choice = input(">>> ")
     if user_choice == '1':
         # USERS
         print(' USERS MENU '.center(50, '='))
         print('What do you want to do?')
         print("""
-        1 - Show all users
-        2 - Add user
-        3 - delete user
-        """)
+1 - Show all users
+2 - Add user
+3 - delete user
+""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL USERS
@@ -56,10 +56,10 @@ while True:
         print(' BOOKS MENU '.center(50, '='))
         print('What do you want to do?')
         print("""
-        1 - Show all books
-        2 - Add book
-        3 - delete book
-        """)
+1 - Show all books
+2 - Add book
+3 - delete book
+""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL BOOKS
@@ -80,11 +80,11 @@ while True:
         print(' RENTALS MENU '.center(50, '='))
         print('What do you want to do?')
         print("""
-        1 - Show all rentals
-        2 - Add rental
-        3 - Update rental
-        4 - Check returns
-        """)
+1 - Show all rentals
+2 - Add rental
+3 - Update rental
+4 - Check returns
+""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL RENTALS

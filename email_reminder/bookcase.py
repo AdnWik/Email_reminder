@@ -156,22 +156,29 @@ class Bookcase:
 
     def delete_book(self, conn):
         self.get_available_books(conn)
-        for no, book in enumerate(self.books, 1):
-            print(f'{no} -> {book.title} {book.author} ')
+        print('BOOKS AVAILABLE TO DELETE'.center(50, '='))
+        for book_no, book in enumerate(self.books, 1):
+            print(f'{book_no} -> {book} ')
 
         print('\nChose book to delete')
         user_choice = int(input('>>> '))
-        for no, book in enumerate(self.books, 1):
-            if user_choice == no:
-                book_id = str(book.book_id)
+        for book_no, book in enumerate(self.books, 1):
+            if user_choice == book_no:
+                book_to_delete = book
 
         query = """DELETE FROM books
                    WHERE id = ?"""
-        data = [(book_id), ]
-        try:
-            insert_into_database(conn, query, data)
-        except OperationalError:
-            pass
+        data = [(str(book_to_delete.book_id)), ]
+
+        print(f'\nDo you want delete "{book_to_delete}"?')
+        print('Y/n ?')
+        user_choice = input('>>> ')
+        if user_choice == 'Y':
+            try:
+                insert_into_database(conn, query, data)
+                print(f'Book "{book_to_delete}" has been deleted')
+            except OperationalError:
+                pass
 
     def delete_user(self, conn):
         pass
