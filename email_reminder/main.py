@@ -72,7 +72,7 @@ while True:
 
         elif user_choice == '3':
             # DELETE BOOK
-            pass
+            bookcase.delete_book(conn)
 
 
     elif user_choice == '3':
