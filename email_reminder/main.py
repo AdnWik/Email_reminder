@@ -49,7 +49,7 @@ Other - Exit""")
 
         elif user_choice == '3':
             # DELETE USER
-            pass
+            bookcase.delete_user(conn)
 
     elif user_choice == '2':
         # BOOKS

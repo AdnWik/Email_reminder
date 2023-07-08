@@ -1,6 +1,7 @@
 from sqlite3 import OperationalError
 from datetime import datetime
-from db_conn import get_data_from_database,insert_into_database
+from collections import namedtuple
+from db_conn import get_data_from_database, insert_into_database
 from book import Book
 from user import User
 from rental import Rental
@@ -156,29 +157,56 @@ class Bookcase:
 
     def delete_book(self, conn):
         self.get_available_books(conn)
-        print('BOOKS AVAILABLE TO DELETE'.center(50, '='))
-        for book_no, book in enumerate(self.books, 1):
-            print(f'{book_no} -> {book} ')
+        if len(self.books) == 0:
+            print('NO BOOKS AVAILABLE TO DELETE'.center(50, '='))
+        else:
+            print('BOOKS AVAILABLE TO DELETE'.center(50, '='))
+            for book_no, book in enumerate(self.books, 1):
+                print(f'{book_no} -> {book} ')
 
-        print('\nChose book to delete')
-        user_choice = int(input('>>> '))
-        for book_no, book in enumerate(self.books, 1):
-            if user_choice == book_no:
-                book_to_delete = book
+            print('\nChose book to delete')
+            user_choice = int(input('>>> '))
+            for book_no, book in enumerate(self.books, 1):
+                if user_choice == book_no:
+                    book_to_delete = book
 
-        query = """DELETE FROM books
-                   WHERE id = ?"""
-        data = [(str(book_to_delete.book_id)), ]
+            query = """DELETE FROM books
+                    WHERE id = ?"""
+            data = [(str(book_to_delete.book_id)), ]
 
-        print(f'\nDo you want delete "{book_to_delete}"?')
-        print('Y/n ?')
-        user_choice = input('>>> ')
-        if user_choice == 'Y':
-            try:
-                insert_into_database(conn, query, data)
-                print(f'Book "{book_to_delete}" has been deleted')
-            except OperationalError:
-                pass
+            print(f'\nDo you want delete "{book_to_delete}"?')
+            print('Y/n ?')
+            user_choice = input('>>> ')
+            if user_choice == 'Y':
+                try:
+                    insert_into_database(conn, query, data)
+                    print(f'Book "{book_to_delete}" has been deleted')
+                except OperationalError:
+                    pass
 
     def delete_user(self, conn):
-        pass
+        query = """SELECT	t2.user_id,
+        t2.first_name,
+        t2.last_name, 
+        t2.email_address,
+        COUNT(t1.user_id) AS rented_books,
+        CASE
+            WHEN t1.returned = 1 THEN COUNT(t1.returned) ELSE 0 END AS returned_books
+        FROM rentals AS t1
+        LEFT JOIN users AS t2
+        ON t1.user_id = t2.user_id
+        GROUP BY t1.user_id"""
+
+        data = get_data_from_database(conn, query)
+        users_available_to_del = []
+        user = namedtuple('user_id', 'first_name', 'last_name', 'email_address')
+        for user_data in data:
+            user_id, first_name, last_name, email_address, rented_books, returned_books = user_data
+            if rented_books == returned_books:
+                users_available_to_del.append(user(user_id, first_name, last_name, email_address))
+
+        if len(users_available_to_del) == 0:
+            print('NO USERS AVAILABLE TO DELETE'.center(50, '='))
+        else:
+            # TODO:
+            pass
