@@ -88,7 +88,7 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL RENTALS
-            bookcase.show_all_rentals()
+            bookcase.show_all_rentals(conn)
 
         elif user_choice == '2':
             # ADD RENTAL

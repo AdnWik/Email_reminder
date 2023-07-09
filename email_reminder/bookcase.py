@@ -151,7 +151,8 @@ class Bookcase:
         for book in self.books:
             print(book)
 
-    def show_all_rentals(self):
+    def show_all_rentals(self, conn):
+        self.get_all_rentals(conn)
         for rental in self.rentals:
             print(rental)
 
@@ -199,14 +200,25 @@ class Bookcase:
 
         data = get_data_from_database(conn, query)
         users_available_to_del = []
-        user = namedtuple('user_id', 'first_name', 'last_name', 'email_address')
-        for user_data in data:
-            user_id, first_name, last_name, email_address, rented_books, returned_books = user_data
-            if rented_books == returned_books:
-                users_available_to_del.append(user(user_id, first_name, last_name, email_address))
+        user_data = namedtuple('user', 'user_id, first_name, last_name, email_address, rented_books, returned_books')
+        for user in map(user_data._make, data):
+            if user.rented_books == user.returned_books:
+                users_available_to_del.append(user)
 
         if len(users_available_to_del) == 0:
             print('NO USERS AVAILABLE TO DELETE'.center(50, '='))
         else:
-            # TODO:
-            pass
+            print('USERS AVAILABLE TO DELETE'.center(50, '='))
+            for user_no, user in enumerate(users_available_to_del, 1):
+                print(f'{user_no} -> {user.first_name} {user.last_name} {user.email_address} {user.email_address}')
+            print('\nWhich user do you want to delete ?')
+            user_choice = int(input('>>> '))
+            selected_user = users_available_to_del[user_choice - 1]
+            print(f'Selected user: {selected_user.first_name} {selected_user.last_name} {selected_user.email_address}')
+            print('Do you want remove it? (Y/n)')
+            user_choice = input('>>> ')
+            if user_choice == 'Y':
+                query = """"""
+                data = [(selected_user.user_id), ]
+                # TODO:
+                print('DELETED')
