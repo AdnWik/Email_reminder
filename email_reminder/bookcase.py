@@ -94,7 +94,7 @@ class Bookcase:
 
 
     def check_returns(self, conn):
-        query = """SELECT	t3.title,
+        query = """SELECT   t3.title,
                             t3.author,
                             t2.first_name,
                             t2.last_name,
@@ -186,9 +186,11 @@ class Bookcase:
                     pass
 
     def delete_user(self, conn):
-        query = """SELECT	t2.user_id,
+        # FIXME:
+        # Select users with rentals
+        query = """SELECT   t2.user_id,
         t2.first_name,
-        t2.last_name, 
+        t2.last_name,
         t2.email_address,
         COUNT(t1.user_id) AS rented_books,
         CASE
@@ -198,9 +200,29 @@ class Bookcase:
         ON t1.user_id = t2.user_id
         GROUP BY t1.user_id"""
 
+        # Select users without any rentals
+        query_2 = """SELECT user_id,
+        first_name,
+        last_name,
+        email_address
+        FROM users
+        EXCEPT
+        SELECT	t2.user_id,
+        t2.first_name ,
+        t2.last_name ,
+        t2.email_address
+        FROM rentals AS t1
+        LEFT JOIN users AS t2
+        ON t1.user_id = t2.user_id"""
+
         data = get_data_from_database(conn, query)
+        users_data = get_data_from_database(conn, query_2)
+        users_data[0] += (0, 0, )
+        data.extend(users_data)
+        print(data)
+
         users_available_to_del = []
-        user_data = namedtuple('user', 'user_id, first_name, last_name, email_address, rented_books, returned_books')
+        user_data = namedtuple('user', ['user_id', 'first_name', 'last_name', 'email_address', 'rented_books', 'returned_books'], defaults=[0, 0])
         for user in map(user_data._make, data):
             if user.rented_books == user.returned_books:
                 users_available_to_del.append(user)
@@ -220,5 +242,8 @@ class Bookcase:
             if user_choice == 'Y':
                 query = """"""
                 data = [(selected_user.user_id), ]
-                # TODO:
-                print('DELETED')
+                try:
+                    insert_into_database(conn, query, data)
+                    print(f'User "{selected_user.first_name} {selected_user.last_name}" has been deleted')
+                except OperationalError:
+                    pass
