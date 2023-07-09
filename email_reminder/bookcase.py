@@ -219,7 +219,6 @@ class Bookcase:
         users_data = get_data_from_database(conn, query_2)
         users_data[0] += (0, 0, )
         data.extend(users_data)
-        print(data)
 
         users_available_to_del = []
         user_data = namedtuple('user', ['user_id', 'first_name', 'last_name', 'email_address', 'rented_books', 'returned_books'], defaults=[0, 0])
@@ -240,10 +239,12 @@ class Bookcase:
             print('Do you want remove it? (Y/n)')
             user_choice = input('>>> ')
             if user_choice == 'Y':
-                query = """"""
-                data = [(selected_user.user_id), ]
+                query = """DELETE FROM users
+                    WHERE id = ?"""
+                data = [(str(selected_user.user_id)), ]
                 try:
                     insert_into_database(conn, query, data)
                     print(f'User "{selected_user.first_name} {selected_user.last_name}" has been deleted')
-                except OperationalError:
-                    pass
+                except OperationalError as error:
+                    print(str(error))
+
