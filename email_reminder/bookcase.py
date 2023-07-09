@@ -1,6 +1,7 @@
 from sqlite3 import OperationalError
 from datetime import datetime
 from collections import namedtuple
+import logging
 from db_conn import get_data_from_database, insert_into_database
 from book import Book
 from user import User
@@ -215,18 +216,28 @@ class Bookcase:
         LEFT JOIN users AS t2
         ON t1.user_id = t2.user_id"""
 
-        data = get_data_from_database(conn, query)
-        users_data = get_data_from_database(conn, query_2)
-        users_data[0] += (0, 0, )
-        data.extend(users_data)
-
+        data = []
         users_available_to_del = []
-        user_data = namedtuple('user', ['user_id', 'first_name', 'last_name', 'email_address', 'rented_books', 'returned_books'], defaults=[0, 0])
-        for user in map(user_data._make, data):
-            if user.rented_books == user.returned_books:
-                users_available_to_del.append(user)
+        users_with_rentals = get_data_from_database(conn, query)
+        users_without_rentals = get_data_from_database(conn, query_2)
 
-        if len(users_available_to_del) == 0:
+        if users_with_rentals:
+            data.extend(users_with_rentals)
+
+        if users_without_rentals:
+            users_without_rentals[0] += (0, 0, )
+            data.extend(users_without_rentals)
+
+        if not data:
+            logging.info('NO DATA FROM DATABASE')
+        else:
+            user_namedtuple = namedtuple('user', ['user_id', 'first_name', 'last_name', 'email_address', 'rented_books', 'returned_books'], defaults=[0, 0])
+            for user in map(user_namedtuple._make, data):
+                if user.rented_books == user.returned_books:
+                    users_available_to_del.append(user)
+            logging.info('USERS CREATED')
+
+        if not users_available_to_del:
             print('NO USERS AVAILABLE TO DELETE'.center(50, '='))
         else:
             print('USERS AVAILABLE TO DELETE'.center(50, '='))
@@ -240,7 +251,7 @@ class Bookcase:
             user_choice = input('>>> ')
             if user_choice == 'Y':
                 query = """DELETE FROM users
-                    WHERE id = ?"""
+                    WHERE user_id = ?"""
                 data = [(str(selected_user.user_id)), ]
                 try:
                     insert_into_database(conn, query, data)
