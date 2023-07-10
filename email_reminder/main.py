@@ -1,20 +1,9 @@
-from sqlite3 import OperationalError
 from db_conn import create_connection
 from bookcase import Bookcase
-from user import User
-from book import Book
-
 
 
 conn = create_connection()
 bookcase = Bookcase()
-
-try:
-    bookcase.get_all_books(conn)
-    bookcase.get_all_users(conn)
-    bookcase.get_all_rentals(conn)
-except OperationalError:
-    pass
 
 print(' EMAIL REMINDER '.center(50, '='))
 while True:
@@ -39,12 +28,12 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL USERS
-            bookcase.show_all_users()
+            bookcase.show_all_users(conn)
             pass
 
         elif user_choice == '2':
             # ADD USER
-            User.add_user(conn)
+            bookcase.add_user(conn)
             bookcase.get_all_users(conn)
 
         elif user_choice == '3':
@@ -63,17 +52,16 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL BOOKS
-            bookcase.show_all_books()
+            bookcase.show_all_books(conn)
 
         elif user_choice == '2':
             # ADD BOOK
-            Book.add_book(conn)
+            bookcase.add_book(conn)
             bookcase.get_all_books(conn)
 
         elif user_choice == '3':
             # DELETE BOOK
             bookcase.delete_book(conn)
-
 
     elif user_choice == '3':
         # RENTALS
@@ -96,6 +84,7 @@ Other - Exit""")
 
         elif user_choice == '3':
             # UPDATE RENTAL
+            # TODO:
             pass
 
         elif user_choice == '4':

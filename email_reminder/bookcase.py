@@ -3,89 +3,141 @@ from datetime import datetime
 from collections import namedtuple
 import logging
 from db_conn import get_data_from_database, insert_into_database
-from book import Book
-from user import User
 from rental import Rental
-
 
 
 class Bookcase:
 
-    def __init__(self) -> None:
-        self.books = []
-        self.users = []
-        self.rentals = []
+    @staticmethod
+    def add_user(conn):
+        print('Enter user first_name')
+        first_name = input('>>> ')
+        print('Enter user last_name')
+        last_name = input('>>> ')
+        print('Enter user email_address')
+        email_address = input('>>> ')
 
-    def get_all_books(self, conn) -> None:
-        query = "select * from books"
-
+        query = """insert into users (first_name, last_name, email_address) values(?,?,?)"""
+        data = [(first_name, last_name, email_address), ]
         try:
-            data = get_data_from_database(conn, query)
-            self.books = []
-            for book in data:
-                book_id, title, author, created_at = book
-                self.books.append(Book(
-                    book_id,
-                    title,
-                    author,
-                    created_at
-                ))
+            insert_into_database(conn, query, data)
         except OperationalError:
             pass
 
-    def get_all_users(self, conn) -> None:
-        query = "select * from users"
+    @staticmethod
+    def add_book(conn):
+        # Date fromat YYYY-MM-DD HH:MM:SS
+        print('Enter book title')
+        title = input('>>> ')
+        print('Enter book author')
+        author = input('>>> ')
+        print('Enter book title')
+        release_date = input('>>> ')
+
+        query = """insert into books (title, author, created_at) values(?,?,?)"""
+        data = [(title, author, release_date), ]
         try:
-            data = get_data_from_database(conn, query)
-            self.users = []
-            for user in data:
-                user_id, first_name, last_name, email_address = user
-                self.users.append(User(
-                    user_id,
-                    first_name,
-                    last_name,
-                    email_address
-                ))
+            insert_into_database(conn, query, data)
         except OperationalError:
             pass
 
-    def get_all_rentals(self, conn) -> None:
-        query = "select * from rentals"
+    @staticmethod
+    def get_all_books(conn) -> list:
+        field_names = ['book_id',
+                       'title',
+                       'author',
+                       'created_at']
+        book_tuple = namedtuple('Book', field_names)
+        books = []
+        query = "SELECT * FROM books"
+
         try:
             data = get_data_from_database(conn, query)
-            self.rentals = []
-            for rental in data:
-                rental_id, user_id, book_id, rental_date, return_date, returned = rental
-                self.rentals.append(Rental(
-                    rental_id,
-                    user_id,
-                    book_id,
-                    rental_date,
-                    return_date,
-                    returned
-                ))
+            if data:
+                for book in map(book_tuple._make, data):
+                    books.append(book)
+                return books
+            else:
+                return None
         except OperationalError:
-            pass
+            return None
 
-    def new_rental(self, conn):
-        self.get_available_books(conn)
+    @staticmethod
+    def get_all_users(conn) -> list:
+        field_names = ['user_id',
+                       'first_name',
+                       'last_name',
+                       'email_address']
+        user_tuple = namedtuple('User', field_names)
+        users = []
+        query = "SELECT * FROM users"
+
+        try:
+            data = get_data_from_database(conn, query)
+            if data:
+                for user in map(user_tuple._make, data):
+                    users.append(user)
+                return users
+            else:
+                return None
+        except OperationalError:
+            return None
+
+    @staticmethod
+    def get_all_rentals(conn) -> list:
+        field_names = ['email_address',
+                       'title',
+                       'author',
+                       'rental_date',
+                       'return_date',
+                       'returned']
+        rental_tuple = namedtuple('Rental', field_names)
+        rentals = []
+        query = """SELECT   t2.email_address,
+                            t3.title,
+                            t3.author,
+                            t1.rental_date,
+                            t1.return_date,
+                            t1.returned
+                    FROM rentals AS t1
+                    LEFT JOIN users AS t2
+                    ON t1.user_id = t2.user_id
+                    LEFT JOIN books AS t3
+                    ON t1.book_id = t3.id"""
+
+        try:
+            data = get_data_from_database(conn, query)
+            if data:
+                for rental in map(rental_tuple._make, data):
+                    rentals.append(rental)
+                return rentals
+            else:
+                return None
+        except OperationalError:
+            return None
+
+    @staticmethod
+    def new_rental(conn):
+        available_books = Bookcase.get_available_books(conn)
+        users = Bookcase.get_all_users(conn)
         print('New rental'.center(50, '-'))
         print('Chose user')
-        for No, user in enumerate(self.users, 1):
-            print(f'{No} - {user.name}')
+        for No, user in enumerate(users, 1):
+            print(f'{No} - {user.first_name} {user.last_name}')
 
         user_index = int(input('>>> '))
-        selected_user = self.users[user_index - 1].user_id
+        selected_user = users[user_index - 1].user_id
 
         print('\n')
         print('Chose book to rent')
-        for No, book in enumerate(self.books, 1):
+        for No, book in enumerate(available_books, 1):
             print(f'{No} - {book.title}')
         book_index = int(input('>>> '))
-        selected_book = self.books[book_index - 1].book_id
+        selected_book = available_books[book_index - 1].book_id
 
         print('\n')
-        print('Enter rent date (YYYY-MM-DD  HH:MM:SS):   (If today press enter)')
+        print(f'Enter rent date (YYYY-MM-DD  HH:MM:SS):'
+              f'   (If today press enter)')
 
         try:
             user_date = datetime.fromisoformat(input('>>> '))
@@ -93,8 +145,19 @@ class Bookcase:
         except ValueError:
             Rental.add_rental(conn, selected_user, selected_book)
 
+        print('Rental successful added')
 
-    def check_returns(self, conn):
+    @staticmethod
+    def check_returns(conn):
+        field_names = ['book_title',
+                       'book_author',
+                       'user_first_name',
+                       'user_last_name',
+                       'user_email',
+                       'return_date',
+                       'delayed_days']
+        rental_tuple = namedtuple('Rental', field_names)
+        delayed_rentals = []
         query = """SELECT   t3.title,
                             t3.author,
                             t2.first_name,
@@ -109,23 +172,32 @@ class Bookcase:
                     ON t1.book_id = t3.id
                     WHERE datetime(t1.return_date) < datetime('now')
                     AND t1.returned = 0"""
+
         data = get_data_from_database(conn, query)
-        for record in data:
-            book_title, book_author, user_first_name, user_last_name, user_email, return_date, delayed_days = record
-            delayed_days_formatted = float(delayed_days)
-            print(f'User email: {user_email:<40} Return date: {return_date:<20} Delayed: {delayed_days_formatted:.1f} days')
-
-        delayed_rentals_number = len(data)
-        if delayed_rentals_number == 0:
+        if not data:
             print('You have not delayed rentals')
+        else:
+            for rental in map(rental_tuple._make, data):
+                delayed_rentals.append(rental)
 
-        elif delayed_rentals_number > 0:
-            print(f'\nYou have {delayed_rentals_number} delayed rentals')
+            for rental in delayed_rentals:
+                print(f'User email: {rental.user_email:<40}'
+                      f' Return date: {rental.return_date:<20}'
+                      f' Delayed: {float(rental.delayed_days):.1f} days')
+
+            print(f'\nYou have {len(delayed_rentals)} delayed rentals')
             print('Do you want send email reminders? (y/N)')
             input(">>> ")
+            # TODO:
 
-    def get_available_books(self, conn):
-        self.books = []
+    @staticmethod
+    def get_available_books(conn) -> list:
+        field_names = ['book_id',
+                       'title',
+                       'author',
+                       'created_at']
+        book_tuple = namedtuple('Book', field_names)
+        available_books = []
         query = """SELECT * FROM books
                     EXCEPT
                     SELECT	t1.*
@@ -133,42 +205,52 @@ class Bookcase:
                     LEFT JOIN rentals AS t2
                     ON t1.id = t2.book_id
                     WHERE t2.returned = 0"""
-        data = get_data_from_database(conn, query)
+        try:
+            data = get_data_from_database(conn, query)
+            if data:
+                for book in map(book_tuple._make, data):
+                    available_books.append(book)
+                return available_books
+            else:
+                return None
+        except OperationalError:
+            return None
 
-        for book in data:
-            book_id, title, author, created_at = book
-            self.books.append(Book(
-                book_id,
-                title,
-                author,
-                created_at
-            ))
+    @staticmethod
+    def show_all_users(conn):
+        users = Bookcase.get_all_users(conn)
+        for no, user in enumerate(users, 1):
+            print(f'{no} - {user.first_name}'
+                  f' {user.last_name} ({user.email_address})')
 
-    def show_all_users(self):
-        for user in self.users:
-            print(user)
+    @staticmethod
+    def show_all_books(conn):
+        books = Bookcase.get_all_books(conn)
+        for no, book in enumerate(books, 1):
+            print(f'{no} - {book.title} {book.author}')
 
-    def show_all_books(self):
-        for book in self.books:
-            print(book)
+    @staticmethod
+    def show_all_rentals(conn):
+        rentals = Bookcase.get_all_rentals(conn)
+        for no, rental in enumerate(rentals, 1):
+            print(f'{no} - {rental.email_address:<20}'
+                  f' {rental.title:<30} {rental.author:<30}'
+                  f' {rental.rental_date:<20} {rental.return_date:<20}'
+                  f' {rental.returned:<2}')
 
-    def show_all_rentals(self, conn):
-        self.get_all_rentals(conn)
-        for rental in self.rentals:
-            print(rental)
-
-    def delete_book(self, conn):
-        self.get_available_books(conn)
-        if len(self.books) == 0:
+    @staticmethod
+    def delete_book(conn):
+        available_books = Bookcase.get_available_books(conn)
+        if len(available_books) == 0:
             print('NO BOOKS AVAILABLE TO DELETE'.center(50, '='))
         else:
             print('BOOKS AVAILABLE TO DELETE'.center(50, '='))
-            for book_no, book in enumerate(self.books, 1):
+            for book_no, book in enumerate(available_books, 1):
                 print(f'{book_no} -> {book} ')
 
             print('\nChose book to delete')
             user_choice = int(input('>>> '))
-            for book_no, book in enumerate(self.books, 1):
+            for book_no, book in enumerate(available_books, 1):
                 if user_choice == book_no:
                     book_to_delete = book
 
@@ -186,8 +268,8 @@ class Bookcase:
                 except OperationalError:
                     pass
 
-    def delete_user(self, conn):
-        # FIXME:
+    @staticmethod
+    def delete_user(conn):
         # Select users with rentals
         query = """SELECT   t2.user_id,
         t2.first_name,
@@ -231,7 +313,13 @@ class Bookcase:
         if not data:
             logging.info('NO DATA FROM DATABASE')
         else:
-            user_namedtuple = namedtuple('user', ['user_id', 'first_name', 'last_name', 'email_address', 'rented_books', 'returned_books'], defaults=[0, 0])
+            fields_name = ['user_id',
+                           'first_name',
+                           'last_name',
+                           'email_address',
+                           'rented_books',
+                           'returned_books']
+            user_namedtuple = namedtuple('user', fields_name, defaults=[0, 0])
             for user in map(user_namedtuple._make, data):
                 if user.rented_books == user.returned_books:
                     users_available_to_del.append(user)
@@ -242,11 +330,13 @@ class Bookcase:
         else:
             print('USERS AVAILABLE TO DELETE'.center(50, '='))
             for user_no, user in enumerate(users_available_to_del, 1):
-                print(f'{user_no} -> {user.first_name} {user.last_name} {user.email_address} {user.email_address}')
+                print(f'{user_no} -> {user.first_name} {user.last_name}'
+                      f' {user.email_address} {user.email_address}')
             print('\nWhich user do you want to delete ?')
             user_choice = int(input('>>> '))
             selected_user = users_available_to_del[user_choice - 1]
-            print(f'Selected user: {selected_user.first_name} {selected_user.last_name} {selected_user.email_address}')
+            print(f'Selected user: {selected_user.first_name}'
+                  f' {selected_user.last_name} {selected_user.email_address}')
             print('Do you want remove it? (Y/n)')
             user_choice = input('>>> ')
             if user_choice == 'Y':
@@ -258,4 +348,3 @@ class Bookcase:
                     print(f'User "{selected_user.first_name} {selected_user.last_name}" has been deleted')
                 except OperationalError as error:
                     print(str(error))
-
