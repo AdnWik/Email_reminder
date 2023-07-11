@@ -69,8 +69,8 @@ Other - Exit""")
         print('What do you want to do?')
         print("""
 1 - Show all rentals
-2 - Add rental
-3 - Update rental
+2 - Rent a book
+3 - Return a book
 4 - Check returns
 """)
         user_choice = input(">>> ")
@@ -79,13 +79,12 @@ Other - Exit""")
             bookcase.show_all_rentals(conn)
 
         elif user_choice == '2':
-            # ADD RENTAL
+            # RENT A BOOK
             bookcase.new_rental(conn)
 
         elif user_choice == '3':
-            # UPDATE RENTAL
-            # TODO:
-            pass
+            # RETURN A BOOK
+            bookcase.return_book(conn)
 
         elif user_choice == '4':
             # CHECK RETURNS
