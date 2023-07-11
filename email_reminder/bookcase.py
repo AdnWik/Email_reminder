@@ -348,3 +348,48 @@ class Bookcase:
                     print(f'User "{selected_user.first_name} {selected_user.last_name}" has been deleted')
                 except OperationalError as error:
                     print(str(error))
+
+    @staticmethod
+    def return_book(conn):
+        field_names = ['id',
+                       'book_title',
+                       'book_author',
+                       'user_first_name',
+                       'user_last_name',
+                       'user_email',
+                       'return_date']
+        rental_tuple = namedtuple('Rental', field_names)
+        rentals = []
+        query = """SELECT   t1.id,
+                            t3.title,
+                            t3.author,
+                            t2.first_name,
+                            t2.last_name,
+                            t2.email_address,
+                            t1.return_date
+                    FROM rentals AS t1
+                    LEFT JOIN users AS t2
+                    ON t1.user_id = t2.user_id
+                    LEFT JOIN books AS t3
+                    ON t1.book_id = t3.id
+                    WHERE t1.returned = 0"""
+
+        data = get_data_from_database(conn, query)
+        if data:
+            for rental in map(rental_tuple._make, data):
+                rentals.append(rental)
+
+        print(' RENTALS AVAILABLE TO RETURN'.center(50, '='))
+        for no, rental in enumerate(rentals, 1):
+            print(f'{no} -> Book: {rental.book_title:<30} {rental.book_author:<30} | User: {rental.user_first_name:<20} {rental.user_last_name:<20} {rental.user_email}')
+
+        print('\nWitch book do you want to return?')
+        userChoice = int(input(">>> "))
+        try:
+            rental_idx = userChoice - 1
+            query = """UPDATE rentals SET returned = 1 WHERE id = ?"""
+            data = [(str(rentals[rental_idx].id)), ]
+            insert_into_database(conn, query, data)
+            print(f'Book: successful returned')
+        except OperationalError:
+            pass
