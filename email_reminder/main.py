@@ -1,8 +1,9 @@
-from db_conn import create_connection
+"""Main - Email_Reminder"""
+import logging
 from bookcase import Bookcase
 
 
-conn = create_connection()
+logging.basicConfig(level=logging.INFO)
 bookcase = Bookcase()
 
 print(' EMAIL REMINDER '.center(50, '='))
@@ -28,17 +29,16 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL USERS
-            bookcase.show_all_users(conn)
-            pass
+            bookcase.show_all_users()
 
         elif user_choice == '2':
             # ADD USER
-            bookcase.add_user(conn)
-            bookcase.get_all_users(conn)
+            bookcase.add_user()
+            bookcase.get_all_users()
 
         elif user_choice == '3':
             # DELETE USER
-            bookcase.delete_user(conn)
+            bookcase.delete_user()
 
     elif user_choice == '2':
         # BOOKS
@@ -52,16 +52,16 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL BOOKS
-            bookcase.show_all_books(conn)
+            bookcase.show_all_books()
 
         elif user_choice == '2':
             # ADD BOOK
-            bookcase.add_book(conn)
-            bookcase.get_all_books(conn)
+            bookcase.add_book()
+            bookcase.get_all_books()
 
         elif user_choice == '3':
             # DELETE BOOK
-            bookcase.delete_book(conn)
+            bookcase.delete_book()
 
     elif user_choice == '3':
         # RENTALS
@@ -76,19 +76,19 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL RENTALS
-            bookcase.show_all_rentals(conn)
+            bookcase.show_all_rentals()
 
         elif user_choice == '2':
             # RENT A BOOK
-            bookcase.new_rental(conn)
+            bookcase.new_rental()
 
         elif user_choice == '3':
             # RETURN A BOOK
-            bookcase.return_book(conn)
+            bookcase.return_book()
 
         elif user_choice == '4':
             # CHECK RETURNS
-            bookcase.check_returns(conn)
+            bookcase.check_returns()
 
     else:
         break
