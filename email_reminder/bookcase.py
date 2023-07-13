@@ -189,22 +189,9 @@ class Bookcase:
             print(f'\nYou have {len(delayed_rentals)} delayed rentals')
             print('Do you want send email reminders? (y/N)')
 
-            userChoice = input(">>> ")
-            if userChoice == 'y':
-                sender = "Private Person <from@example.com>"
-                receiver = "A Test User <to@example.com>"
-
-                message = f"""\
-                Subject: Hi Mailtrap
-                To: {receiver}
-                From: {sender}
-
-                This is a test e-mail message."""
-
-                with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as server:
-                    server.login("c3a9f81f95780c", "0512af4507550d")
-                    server.sendmail(sender, receiver, message)
-                    logging.info('Email send')
+            user_choice = input(">>> ")
+            if user_choice == 'y':
+                Bookcase.send_email_reminder(delayed_rentals)
 
 
     @staticmethod
@@ -411,3 +398,17 @@ class Bookcase:
                 print('Book: successful returned')
             except ValueError:
                 pass
+
+    def send_email_reminder(data):
+        """Send email reminder for delayed rentals"""
+        sender = "Private Person <from@example.com>"
+        receiver = "A Test User <to@example.com>"
+
+        message = (f"Subject: Hi Mailtrap\n"
+                   f"To: {receiver}\nFrom: {sender}\n\n"
+                   f"This is a test e-mail message.")
+
+        with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as server:
+            server.login("c3a9f81f95780c", "0512af4507550d")
+            server.sendmail(sender, receiver, message)
+            logging.info('Email send')
