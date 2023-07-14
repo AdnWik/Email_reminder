@@ -1,32 +1,94 @@
+"""Main - Email_Reminder"""
+import logging
 from bookcase import Bookcase
-from rental import Rental
-from book import Book
-from sqlite3 import OperationalError
 
 
+logging.basicConfig(level=logging.INFO)
 bookcase = Bookcase()
 
-try:
-    bookcase.get_all_books()
-    bookcase.get_all_users()
-    Rental.get_all_rentals()
-except OperationalError:
-    pass
+print(' EMAIL REMINDER '.center(50, '='))
+while True:
+    print('-'*50)
+    print('What do you want to do?')
+    print("""
+1 - Users
+2 - Books
+3 - Rentals
 
+Other - Exit""")
+    user_choice = input(">>> ")
+    if user_choice == '1':
+        # USERS
+        print(' USERS MENU '.center(50, '='))
+        print('What do you want to do?')
+        print("""
+1 - Show all users
+2 - Add user
+3 - delete user
+""")
+        user_choice = input(">>> ")
+        if user_choice == '1':
+            # SHOW ALL USERS
+            bookcase.show_all_users()
 
-print('New rental'.center(50, '-'))
-print('Chose user')
-for No, user in enumerate(bookcase.users, 1):
-    print(f'{No} - {user.name}')
+        elif user_choice == '2':
+            # ADD USER
+            bookcase.add_user()
+            bookcase.get_all_users()
 
-user_index = int(input('>>> '))
-selected_user = bookcase.users[user_index - 1].user_id
+        elif user_choice == '3':
+            # DELETE USER
+            bookcase.delete_user()
 
-print('\n')
-print('Chose book to rent')
-for No, book in enumerate(bookcase.books, 1):
-    print(f'{No} - {book.title}')
-book_index = int(input('>>> '))
-selected_book = bookcase.books[book_index - 1].book_id
+    elif user_choice == '2':
+        # BOOKS
+        print(' BOOKS MENU '.center(50, '='))
+        print('What do you want to do?')
+        print("""
+1 - Show all books
+2 - Add book
+3 - delete book
+""")
+        user_choice = input(">>> ")
+        if user_choice == '1':
+            # SHOW ALL BOOKS
+            bookcase.show_all_books()
 
-Rental.add_rental(selected_user, selected_book)
+        elif user_choice == '2':
+            # ADD BOOK
+            bookcase.add_book()
+            bookcase.get_all_books()
+
+        elif user_choice == '3':
+            # DELETE BOOK
+            bookcase.delete_book()
+
+    elif user_choice == '3':
+        # RENTALS
+        print(' RENTALS MENU '.center(50, '='))
+        print('What do you want to do?')
+        print("""
+1 - Show all rentals
+2 - Rent a book
+3 - Return a book
+4 - Check returns
+""")
+        user_choice = input(">>> ")
+        if user_choice == '1':
+            # SHOW ALL RENTALS
+            bookcase.show_all_rentals()
+
+        elif user_choice == '2':
+            # RENT A BOOK
+            bookcase.new_rental()
+
+        elif user_choice == '3':
+            # RETURN A BOOK
+            bookcase.return_book()
+
+        elif user_choice == '4':
+            # CHECK RETURNS
+            bookcase.check_returns()
+
+    else:
+        break

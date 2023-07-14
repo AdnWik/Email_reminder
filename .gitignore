@@ -1,7 +1,7 @@
 /Email_reminder.code-workspace
 /email_reminder_venv
-/email_reminder/test.txt
 /email_reminder/tests_file
 /email_reminder/__pycache__
-/email_reminder/base.db
+*/base.db
 base.db
+/email_reminder/.env
