@@ -137,14 +137,13 @@ class Bookcase:
         selected_book = available_books[book_index - 1].book_id
 
         print('\n')
-        print(f'Enter rent date (YYYY-MM-DD  HH:MM:SS):'
-              f'   (If today press enter)')
+        print('Enter rent date (YYYY-MM-DD  HH:MM:SS):   (If today press enter)')
 
         try:
             user_date = datetime.fromisoformat(input('>>> '))
-            Rental.add_rental(conn, selected_user, selected_book, rental_date=user_date)
+            Rental.add_rental(selected_user, selected_book, rental_date=user_date)
         except ValueError:
-            Rental.add_rental(conn, selected_user, selected_book)
+            Rental.add_rental(selected_user, selected_book)
 
         print('Rental successful added')
 
@@ -184,7 +183,7 @@ class Bookcase:
             for rental in delayed_rentals:
                 print(f'User email: {rental.user_email:<40}'
                       f' Return date: {rental.return_date:<20}'
-                      f' Delayed: {float(rental.delayed_days):.1f} days')
+                      f' Delayed: {float(rental.delayed_days):.0f} days')
 
             print(f'\nYou have {len(delayed_rentals)} delayed rentals')
             print('Do you want send email reminders? (y/N)')
@@ -410,9 +409,13 @@ class Bookcase:
             sender = "Book Owner <{book.owner@gmail.com}>"
             receiver = (f"{record.user_first_name} {record.user_last_name}"
                         f" <{record.user_email}>")
-            message = (f"Subject: Book return delayed!\n"
-                       f"To: {receiver}\nFrom: {sender}\n\n"
-                       f"Get back my book!")
+            message = (
+                f'Subject: Book "{record.book_title}" return delayed!\n'
+                f'To: {receiver}\nFrom: {sender}\n\n'
+                f'{record.user_first_name} get back my book!'
+                f' "{record.book_title} - {record.book_author}"'
+                f'.\nYou were supposed to give it back to me '
+                f'{float(record.delayed_days):.0f} days ago')
 
             Credentials = namedtuple('User', 'username, password')
             credentials = Credentials(username, password)
