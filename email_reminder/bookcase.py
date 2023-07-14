@@ -1,11 +1,14 @@
 from datetime import datetime
 from collections import namedtuple
 import logging
+from string import Template
+from os import getenv
+from dotenv import load_dotenv
 from database import get_data_from_database, insert_into_database
 from rental import Rental
 from send_email import EmailSender
 
-
+load_dotenv()
 
 class Bookcase:
 
@@ -400,25 +403,32 @@ class Bookcase:
 
     def send_email_reminder(data):
         """Send email reminder for delayed rentals"""
-        server = "sandbox.smtp.mailtrap.io"
-        port = 2525
-        username = "c3a9f81f95780c"
-        password = "0512af4507550d"
+        server = getenv('SERVER')
+        port = getenv('PORT')
+        username = getenv('MAIL_USERNAME')
+        password = getenv('MAIL_PASSWORD')
+        Credentials = namedtuple('User', 'username, password')
+        credentials = Credentials(username, password)
 
-        for record in data:
-            sender = "Book Owner <{book.owner@gmail.com}>"
-            receiver = (f"{record.user_first_name} {record.user_last_name}"
-                        f" <{record.user_email}>")
-            message = (
-                f'Subject: Book "{record.book_title}" return delayed!\n'
-                f'To: {receiver}\nFrom: {sender}\n\n'
-                f'{record.user_first_name} get back my book!'
-                f' "{record.book_title} - {record.book_author}"'
-                f'.\nYou were supposed to give it back to me '
-                f'{float(record.delayed_days):.0f} days ago')
+        message_template = Template(
+            """$name get back my book! ($title - $author)
+You were supposed to give it back to me $days days ago.
 
-            Credentials = namedtuple('User', 'username, password')
-            credentials = Credentials(username, password)
-            with EmailSender(port, server, credentials) as connection:
-                connection.send_email(sender, receiver, message)
-                logging.info('Email send')
+I'm waiting!""")
+
+        with EmailSender(port, server, credentials) as connection:
+            for record in data:
+                sender = getenv('SENDER')
+                receiver = (f"{record.user_first_name} {record.user_last_name}"
+                            f" <{record.user_email}>")
+                subject = f'Subject: Book "{record.book_title}" return delayed!\n'
+
+                message = message_template.substitute({
+                    'name': record.user_first_name,
+                    'title': record.book_title,
+                    'author': record.book_author,
+                    'days': format(float(record.delayed_days), '.0f')
+                })
+
+                connection.send_email(sender, receiver, subject, message)
+                logging.info(f'Email sended to {record.user_email}')
