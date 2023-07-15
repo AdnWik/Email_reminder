@@ -2,14 +2,15 @@
 import logging
 from bookcase import Bookcase
 
-
+# LOGGING
 logging.basicConfig(level=logging.INFO)
-bookcase = Bookcase()
 
+# EMAIL REMINDER MENU
+bookcase = Bookcase()
 print(' EMAIL REMINDER '.center(50, '='))
 while True:
     print('-'*50)
-    print('What do you want to do?')
+    print('Select category')
     print("""
 1 - Users
 2 - Books
