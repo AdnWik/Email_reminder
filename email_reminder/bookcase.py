@@ -1,11 +1,14 @@
 from datetime import datetime
 from collections import namedtuple
 import logging
+from string import Template
+from os import getenv
+from dotenv import load_dotenv
 from database import get_data_from_database, insert_into_database
 from rental import Rental
 from send_email import EmailSender
 
-
+load_dotenv()
 
 class Bookcase:
 
@@ -137,14 +140,13 @@ class Bookcase:
         selected_book = available_books[book_index - 1].book_id
 
         print('\n')
-        print(f'Enter rent date (YYYY-MM-DD  HH:MM:SS):'
-              f'   (If today press enter)')
+        print('Enter rent date (YYYY-MM-DD  HH:MM:SS):   (If today press enter)')
 
         try:
             user_date = datetime.fromisoformat(input('>>> '))
-            Rental.add_rental(conn, selected_user, selected_book, rental_date=user_date)
+            Rental.add_rental(selected_user, selected_book, rental_date=user_date)
         except ValueError:
-            Rental.add_rental(conn, selected_user, selected_book)
+            Rental.add_rental(selected_user, selected_book)
 
         print('Rental successful added')
 
@@ -184,7 +186,7 @@ class Bookcase:
             for rental in delayed_rentals:
                 print(f'User email: {rental.user_email:<40}'
                       f' Return date: {rental.return_date:<20}'
-                      f' Delayed: {float(rental.delayed_days):.1f} days')
+                      f' Delayed: {float(rental.delayed_days):.0f} days')
 
             print(f'\nYou have {len(delayed_rentals)} delayed rentals')
             print('Do you want send email reminders? (y/N)')
@@ -401,21 +403,32 @@ class Bookcase:
 
     def send_email_reminder(data):
         """Send email reminder for delayed rentals"""
-        server = "sandbox.smtp.mailtrap.io"
-        port = 2525
-        username = "c3a9f81f95780c"
-        password = "0512af4507550d"
+        server = getenv('SERVER')
+        port = getenv('PORT')
+        username = getenv('MAIL_USERNAME')
+        password = getenv('MAIL_PASSWORD')
+        Credentials = namedtuple('User', 'username, password')
+        credentials = Credentials(username, password)
 
-        for record in data:
-            sender = "Book Owner <{book.owner@gmail.com}>"
-            receiver = (f"{record.user_first_name} {record.user_last_name}"
-                        f" <{record.user_email}>")
-            message = (f"Subject: Book return delayed!\n"
-                       f"To: {receiver}\nFrom: {sender}\n\n"
-                       f"Get back my book!")
+        message_template = Template(
+            """$name get back my book! ($title - $author)
+You were supposed to give it back to me $days days ago.
 
-            Credentials = namedtuple('User', 'username, password')
-            credentials = Credentials(username, password)
-            with EmailSender(port, server, credentials) as connection:
-                connection.send_email(sender, receiver, message)
-                logging.info('Email send')
+I'm waiting!""")
+
+        with EmailSender(port, server, credentials) as connection:
+            for record in data:
+                sender = getenv('SENDER')
+                receiver = (f"{record.user_first_name} {record.user_last_name}"
+                            f" <{record.user_email}>")
+                subject = f'Subject: Book "{record.book_title}" return delayed!\n'
+
+                message = message_template.substitute({
+                    'name': record.user_first_name,
+                    'title': record.book_title,
+                    'author': record.book_author,
+                    'days': format(float(record.delayed_days), '.0f')
+                })
+
+                connection.send_email(sender, receiver, subject, message)
+                logging.info(f'Email sended to {record.user_email}')

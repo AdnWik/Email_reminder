@@ -1,3 +1,4 @@
+import email
 import smtplib
 
 
@@ -15,8 +16,13 @@ class EmailSender:
                               self.credentials.password)
         return self
 
-    def send_email(self, sender, receiver, message):
-        self.connection.sendmail(sender, receiver, message)
+    def send_email(self, sender, receiver, subject, message):
+        message = email.message_from_string(message)
+        message['From'] = sender
+        message['To'] = receiver
+        message['Subject'] = subject
+        message.set_charset('utf-8')
+        self.connection.sendmail(sender, receiver, message.as_string())
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()

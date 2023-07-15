@@ -1,4 +1,9 @@
+from os import getenv
 import sqlite3
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 class Database:
@@ -21,7 +26,7 @@ class Database:
         self.connection.close()
 
 
-DATABASE_NAME = 'base.db'
+DATABASE_NAME = getenv('DB_NAME')
 
 
 def execute_on_database(script):
