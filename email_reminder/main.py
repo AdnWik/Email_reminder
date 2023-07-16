@@ -1,12 +1,23 @@
 """Main - Email_Reminder"""
 import logging
-from bookcase import Bookcase
+from bookcase import (show_all_books,
+                      show_all_rentals,
+                      show_all_users,
+                      add_book,
+                      add_user,
+                      get_all_books,
+                      get_all_users,
+                      delete_book,
+                      delete_user,
+                      new_rental,
+                      return_book,
+                      check_returns
+                      )
 
 # LOGGING
 logging.basicConfig(level=logging.INFO)
 
 # EMAIL REMINDER MENU
-bookcase = Bookcase()
 print(' EMAIL REMINDER '.center(50, '='))
 while True:
     print('-'*50)
@@ -30,16 +41,16 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL USERS
-            bookcase.show_all_users()
+            show_all_users()
 
         elif user_choice == '2':
             # ADD USER
-            bookcase.add_user()
-            bookcase.get_all_users()
+            add_user()
+            get_all_users()
 
         elif user_choice == '3':
             # DELETE USER
-            bookcase.delete_user()
+            delete_user()
 
     elif user_choice == '2':
         # BOOKS
@@ -53,16 +64,16 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL BOOKS
-            bookcase.show_all_books()
+            show_all_books()
 
         elif user_choice == '2':
             # ADD BOOK
-            bookcase.add_book()
-            bookcase.get_all_books()
+            add_book()
+            get_all_books()
 
         elif user_choice == '3':
             # DELETE BOOK
-            bookcase.delete_book()
+            delete_book()
 
     elif user_choice == '3':
         # RENTALS
@@ -77,19 +88,19 @@ Other - Exit""")
         user_choice = input(">>> ")
         if user_choice == '1':
             # SHOW ALL RENTALS
-            bookcase.show_all_rentals()
+            show_all_rentals()
 
         elif user_choice == '2':
             # RENT A BOOK
-            bookcase.new_rental()
+            new_rental()
 
         elif user_choice == '3':
             # RETURN A BOOK
-            bookcase.return_book()
+            return_book()
 
         elif user_choice == '4':
             # CHECK RETURNS
-            bookcase.check_returns()
+            check_returns()
 
     else:
         break
