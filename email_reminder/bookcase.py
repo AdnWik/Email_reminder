@@ -1,13 +1,12 @@
 """Bookcase functions
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import namedtuple
 import logging
 from string import Template
 from os import getenv
 from dotenv import load_dotenv
 from database import get_data_from_database, insert_into_database
-from rental import Rental
 from send_email import EmailSender
 
 load_dotenv()
@@ -42,7 +41,7 @@ def add_book() -> None:
     title = input('>>> ')
     print('Enter book author')
     author = input('>>> ')
-    print('Enter book title')
+    print('Enter release date  (YYYY-MM-DD  HH:MM:SS)')
     release_date = input('>>> ')
     query = ("""insert into books (title, author, created_at)
              values(?,?,?)""")
@@ -146,6 +145,34 @@ def get_all_rentals() -> list:
         return None
 
 
+def add_rental(user_id,
+               book_id,
+               rental_date=datetime.now(),
+               days_of_rental=14,
+               returned=False) -> None:
+    """Add rental record to database
+    """
+
+    ret_date = (rental_date +
+                timedelta(days=days_of_rental)).strftime('%Y-%m-%d %H:%M:%S')
+    rental_date_formatted = rental_date.strftime('%Y-%m-%d %H:%M:%S')
+
+    ret = None
+    if not returned:
+        ret = 0
+    else:
+        ret = 1
+    data = [(user_id, book_id, rental_date_formatted, ret_date, ret), ]
+    query = """insert into rentals (user_id,
+                                    book_id,
+                                    rental_date,
+                                    return_date,
+                                    returned)
+                values (?, ?, ?, ?, ?)"""
+
+    insert_into_database(query, data)
+
+
 def new_rental() -> None:
     """Add new rental to database
     """
@@ -173,12 +200,9 @@ def new_rental() -> None:
 
     try:
         user_date = datetime.fromisoformat(input('>>> '))
-        Rental.add_rental(selected_user,
-                          selected_book,
-                          rental_date=user_date
-                          )
+        add_rental(selected_user, selected_book, rental_date=user_date)
     except ValueError:
-        Rental.add_rental(selected_user, selected_book)
+        add_rental(selected_user, selected_book)
 
     print('Rental successful added')
 
@@ -289,7 +313,7 @@ def show_all_rentals() -> None:
 
     rentals = get_all_rentals()
     for no, rental in enumerate(rentals, 1):
-        print(f'{no} - {rental.email_address:<20}'
+        print(f'{no:<3} - {rental.email_address:<20}'
               f' {rental.title:<30} {rental.author:<30}'
               f' {rental.rental_date:<20} {rental.return_date:<20}'
               f' {rental.returned:<2}')
@@ -309,21 +333,20 @@ def delete_book() -> None:
 
         print('\nChose book to delete')
         user_choice = int(input('>>> '))
-        for book_no, book in enumerate(available_books, 1):
-            if user_choice == book_no:
-                book_to_delete = book
+        book_to_delete = available_books[user_choice - 1]
 
-        query = """DELETE FROM books
-                WHERE id = ?"""
-        data = [(str(book_to_delete.book_id)), ]
+        query = """DELETE FROM books WHERE id = ?"""
+        data = [(str(book_to_delete.book_id), ), ]
 
-        print(f'\nDo you want delete "{book_to_delete}"?')
+        print(f'\nDo you want delete "{book_to_delete.title} -'
+              f' {book_to_delete.author}"?')
         print('Y/n ?')
         user_choice = input('>>> ')
         if user_choice == 'Y':
             try:
                 insert_into_database(query, data)
-                print(f'Book "{book_to_delete}" has been deleted')
+                print(f'Book "{book_to_delete.title} -'
+                      f' {book_to_delete.author}" has been deleted')
             except ValueError:
                 pass
 
