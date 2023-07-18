@@ -29,8 +29,8 @@ class Database:
 DATABASE_NAME = getenv('DB_NAME')
 
 
-def execute_on_database(script):
-    connection = sqlite3.connect(DATABASE_NAME)
+def execute_on_database(script, db_name=DATABASE_NAME):
+    connection = sqlite3.connect(db_name)
     with Database(connection) as database:
         database.cursor.executescript(script)
 

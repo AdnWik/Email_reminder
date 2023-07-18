@@ -17,7 +17,13 @@ from bookcase import (show_all_books,
 # LOGGING CONFIG
 logging.basicConfig(level=logging.INFO)
 
+
 def show_menu_options(options: list) -> None:
+    """Show menu options
+
+    Args:
+        options (list): options to show
+    """
     for number, option in enumerate(options, 1):
         print(f'{number} - {option}')
     print('\nOther - EXIT')
@@ -55,7 +61,14 @@ while True:
 
         elif user_choice == '2':
             # ADD USER
-            add_user()
+            print('Enter user first_name')
+            first_name = input('>>> ')
+            print('Enter user last_name')
+            last_name = input('>>> ')
+            print('Enter user email_address')
+            email_address = input('>>> ')
+
+            add_user(first_name, last_name, email_address)
             get_all_users()
 
         elif user_choice == '3':
