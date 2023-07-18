@@ -4,35 +4,34 @@ from datetime import datetime, timedelta
 from collections import namedtuple
 import logging
 from string import Template
+import sqlite3
 from os import getenv
 from dotenv import load_dotenv
-from database import get_data_from_database, insert_into_database
+from database import Database, get_data_from_database, insert_into_database
 from send_email import EmailSender
 
 load_dotenv()
+connection = sqlite3.connect(getenv('DB_NAME'))
 
 
-def add_user() -> None:
+def add_user(first_name,
+             last_name,
+             email_address,
+             conn=connection) -> None:
     """Add user to database
     """
-
-    print('Enter user first_name')
-    first_name = input('>>> ')
-    print('Enter user last_name')
-    last_name = input('>>> ')
-    print('Enter user email_address')
-    email_address = input('>>> ')
 
     query = ("""insert into users (first_name, last_name, email_address)
              values(?,?,?)""")
     data = [(first_name, last_name, email_address), ]
     try:
-        insert_into_database(query, data)
+        with Database(conn) as database:
+            database.cursor.executemany(query, data)
     except ValueError:
         pass
 
 
-def add_book() -> None:
+def add_book(conn=connection) -> None:
     """Add book to database
     Date format YYYY-MM-DD HH:MM:SS
     """
@@ -52,7 +51,7 @@ def add_book() -> None:
         pass
 
 
-def get_all_books() -> list:
+def get_all_books(conn=connection) -> list:
     """Get all books from database
 
     Returns:
@@ -68,7 +67,9 @@ def get_all_books() -> list:
     query = "SELECT * FROM books"
 
     try:
-        data = get_data_from_database(query)
+        with Database(conn) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
         if data:
             for book in map(book_tuple._make, data):
                 books.append(book)
@@ -79,7 +80,7 @@ def get_all_books() -> list:
         return None
 
 
-def get_all_users() -> list:
+def get_all_users(conn=connection) -> list:
     """Get all users from database
 
     Returns:
@@ -106,7 +107,7 @@ def get_all_users() -> list:
         return None
 
 
-def get_all_rentals() -> list:
+def get_all_rentals(conn=connection) -> list:
     """Get all rentals from database
 
     Returns:
@@ -149,7 +150,8 @@ def add_rental(user_id,
                book_id,
                rental_date=datetime.now(),
                days_of_rental=14,
-               returned=False) -> None:
+               returned=False,
+               conn=connection) -> None:
     """Add rental record to database
     """
 
@@ -173,7 +175,7 @@ def add_rental(user_id,
     insert_into_database(query, data)
 
 
-def new_rental() -> None:
+def new_rental(conn=connection) -> None:
     """Add new rental to database
     """
 
@@ -207,7 +209,7 @@ def new_rental() -> None:
     print('Rental successful added')
 
 
-def check_returns() -> None:
+def check_returns(conn=connection) -> None:
     """Check returns in database for date 'now'
     """
 
@@ -256,7 +258,7 @@ def check_returns() -> None:
             send_email_reminder(delayed_rentals)
 
 
-def get_available_books() -> list:
+def get_available_books(conn=connection) -> list:
     """Get all not rented books from database
 
     Returns:
@@ -288,7 +290,7 @@ def get_available_books() -> list:
         return None
 
 
-def show_all_users() -> None:
+def show_all_users(conn=connection) -> None:
     """Show all users from database
     """
 
@@ -298,7 +300,7 @@ def show_all_users() -> None:
               f' {user.last_name} ({user.email_address})')
 
 
-def show_all_books() -> None:
+def show_all_books(conn=connection) -> None:
     """Show all books from database
     """
 
@@ -307,7 +309,7 @@ def show_all_books() -> None:
         print(f'{no} - {book.title} {book.author}')
 
 
-def show_all_rentals() -> None:
+def show_all_rentals(conn=connection) -> None:
     """Show all rentals from database
     """
 
@@ -319,7 +321,7 @@ def show_all_rentals() -> None:
               f' {rental.returned:<2}')
 
 
-def delete_book() -> None:
+def delete_book(conn=connection) -> None:
     """Remove book from database
     """
 
@@ -351,7 +353,7 @@ def delete_book() -> None:
                 pass
 
 
-def delete_user() -> None:
+def delete_user(conn=connection) -> None:
     """Remove user from database if user returned all borrow books
     """
 
@@ -437,7 +439,7 @@ def delete_user() -> None:
                 print(str(error))
 
 
-def return_book() -> None:
+def return_book(conn=connection) -> None:
     """Return borrowed book
     """
 
@@ -489,7 +491,7 @@ def return_book() -> None:
             pass
 
 
-def send_email_reminder(data) -> None:
+def send_email_reminder(data, conn=connection) -> None:
     """Send email reminder for users with delayed rentals
     """
     server = getenv('SERVER')
