@@ -7,7 +7,7 @@ from string import Template
 import sqlite3
 from os import getenv
 from dotenv import load_dotenv
-from database import Database, get_data_from_database, insert_into_database
+from database import Database
 from send_email import EmailSender
 
 load_dotenv()
@@ -172,10 +172,14 @@ def add_rental(user_id,
                                     returned)
                 values (?, ?, ?, ?, ?)"""
 
-    insert_into_database(query, data)
+    try:
+        with Database(db_name) as database:
+            database.cursor.executemany(query, data)
+    except sqlite3.OperationalError:
+        pass
 
 
-def new_rental(db_name=DATABASE_NAME) -> None:
+def new_rental() -> None:
     """Add new rental to database
     """
 
@@ -238,7 +242,13 @@ def check_returns(db_name=DATABASE_NAME) -> None:
                 WHERE datetime(t1.return_date) < datetime('now')
                 AND t1.returned = 0"""
 
-    data = get_data_from_database(query)
+    try:
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
+    except sqlite3.OperationalError:
+        pass
+
     if not data:
         print('You have not delayed rentals')
     else:
@@ -279,7 +289,12 @@ def get_available_books(db_name=DATABASE_NAME) -> list:
                 ON t1.id = t2.book_id
                 WHERE t2.returned = 0"""
     try:
-        data = get_data_from_database(query)
+        try:
+            with Database(db_name) as database:
+                database.cursor.execute(query)
+                data = database.cursor.fetchall()
+        except sqlite3.OperationalError:
+            data = None
         if data:
             for book in map(book_tuple._make, data):
                 available_books.append(book)
@@ -290,7 +305,7 @@ def get_available_books(db_name=DATABASE_NAME) -> list:
         return None
 
 
-def show_all_users(db_name=DATABASE_NAME) -> None:
+def show_all_users() -> None:
     """Show all users from database
     """
 
@@ -300,7 +315,7 @@ def show_all_users(db_name=DATABASE_NAME) -> None:
               f' {user.last_name} ({user.email_address})')
 
 
-def show_all_books(db_name=DATABASE_NAME) -> None:
+def show_all_books() -> None:
     """Show all books from database
     """
 
@@ -309,7 +324,7 @@ def show_all_books(db_name=DATABASE_NAME) -> None:
         print(f'{no} - {book.title} {book.author}')
 
 
-def show_all_rentals(db_name=DATABASE_NAME) -> None:
+def show_all_rentals() -> None:
     """Show all rentals from database
     """
 
@@ -346,9 +361,13 @@ def delete_book(db_name=DATABASE_NAME) -> None:
         user_choice = input('>>> ')
         if user_choice == 'Y':
             try:
-                insert_into_database(query, data)
-                print(f'Book "{book_to_delete.title} -'
-                      f' {book_to_delete.author}" has been deleted')
+                try:
+                    with Database(db_name) as database:
+                        database.cursor.executemany(query, data)
+                        print(f'Book "{book_to_delete.title} -'
+                              f' {book_to_delete.author}" has been deleted')
+                except sqlite3.OperationalError:
+                    pass
             except ValueError:
                 pass
 
@@ -388,8 +407,19 @@ def delete_user(db_name=DATABASE_NAME) -> None:
 
     data = []
     users_available_to_del = []
-    users_with_rentals = get_data_from_database(query)
-    users_without_rentals = get_data_from_database(query_2)
+
+    try:
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            users_with_rentals = database.cursor.fetchall()
+
+        with Database(db_name) as database:
+            database.cursor.execute(query_2)
+            users_without_rentals = database.cursor.fetchall()
+
+    except sqlite3.OperationalError:
+        users_with_rentals = None
+        users_without_rentals = None
 
     if users_with_rentals:
         data.extend(users_with_rentals)
@@ -432,9 +462,13 @@ def delete_user(db_name=DATABASE_NAME) -> None:
                 WHERE user_id = ?"""
             data = [(str(selected_user.user_id)), ]
             try:
-                insert_into_database(query, data)
-                print(f'User "{selected_user.first_name}'
-                      f' {selected_user.last_name}" has been deleted')
+                try:
+                    with Database(db_name) as database:
+                        database.cursor.executemany(query, data)
+                        print(f'User "{selected_user.first_name}'
+                              f' {selected_user.last_name}" has been deleted')
+                except sqlite3.OperationalError:
+                    pass
             except ValueError as error:
                 print(str(error))
 
@@ -466,7 +500,13 @@ def return_book(db_name=DATABASE_NAME) -> None:
                 ON t1.book_id = t3.id
                 WHERE t1.returned = 0"""
 
-    data = get_data_from_database(query)
+    try:
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
+    except sqlite3.OperationalError:
+        data = None
+
     if data:
         for rental in map(rental_tuple._make, data):
             rentals.append(rental)
@@ -485,13 +525,17 @@ def return_book(db_name=DATABASE_NAME) -> None:
             query = ("""UPDATE rentals SET returned = 1
                      WHERE rental_id = ?""")
             data = [(str(rentals[rental_idx].rental_id)), ]
-            insert_into_database(query, data)
-            print('Book: successful returned')
+            try:
+                with Database(db_name) as database:
+                    database.cursor.executemany(query, data)
+                    print('Book: successful returned')
+            except sqlite3.OperationalError:
+                pass
         except ValueError:
             pass
 
 
-def send_email_reminder(data, db_name=DATABASE_NAME) -> None:
+def send_email_reminder(data) -> None:
     """Send email reminder for users with delayed rentals
     """
     server = getenv('SERVER')
