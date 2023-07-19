@@ -1,5 +1,5 @@
 import sqlite3
-from bookcase import get_all_books
+from bookcase import get_all_books, get_all_users, get_all_rentals, get_available_books
 
 DATABASE_NAME = 'for_tests.db'
 
@@ -81,3 +81,21 @@ def test_get_all_books(db_name=DATABASE_NAME):
     books = get_all_books(db_name)
     assert len(books) == 4
     assert books[3][2] == 'Michaił Bułhakow'
+
+def test_get_all_users(db_name=DATABASE_NAME):
+    create_connection(db_name)
+    users = get_all_users(db_name)
+    assert len(users) == 3
+    assert users[2][2] == 'Lockman'
+
+def test_get_all_rentals(db_name=DATABASE_NAME):
+    create_connection(db_name)
+    rentals = get_all_rentals(db_name)
+    assert len(rentals) == 3
+    assert rentals[0][4] == '2023-07-18 19:30:30'
+
+def test_get_available_books(db_name=DATABASE_NAME):
+    create_connection(db_name)
+    available_books = get_available_books(db_name)
+    assert len(available_books) == 3
+    assert 'Dzieci z Bullerbyn' not in [title[1] for title in available_books]
