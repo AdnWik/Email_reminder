@@ -9,11 +9,13 @@ load_dotenv()
 class Database:
     """Database context manager"""
 
-    def __init__(self, connection) -> None:
-        self.connection = connection
+    def __init__(self, db_name) -> None:
+        self.db_name = db_name
+        self.connection = None
         self.cursor = None
 
     def __enter__(self):
+        self.connection = sqlite3.connect(self.db_name)
         self.cursor = self.connection.cursor()
         return self
 

@@ -1,24 +1,28 @@
 import sqlite3
-import pytest
 from bookcase import get_all_books
 
-@pytest.fixture
-def create_connection():
-    conn = sqlite3.connect(":memory:")
+DATABASE_NAME = 'for_tests.db'
+
+
+def create_connection(db_name):
+    conn = sqlite3.connect(db_name)
     cur = conn.cursor()
-    cur.execute("""CREATE TABLE books(
+    cur.execute("""DROP TABLE IF EXISTS books""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS books(
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 title       TEXT    NOT NULL,
                 author      TEXT    NOT NULL,
                 created_at  DATE    NOT NULL)""")
 
-    cur.execute("""CREATE TABLE users (
+    cur.execute("""DROP TABLE IF EXISTS users""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS users (
                 user_id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 first_name      TEXT    NOT NULL,
                 last_name       TEXT    NOT NULL,
                 email_address   TEXT    NOT NULL)""")
 
-    cur.execute("""CREATE TABLE rentals (
+    cur.execute("""DROP TABLE IF EXISTS rentals""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS rentals (
                 rental_id   INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id     INTEGER NOT NULL,
                 book_id     INTEGER NOT NULL,
@@ -68,10 +72,12 @@ def create_connection():
                     )
                 VALUES (?,?,?,?,?)""", sample_rentals_data)
 
-    return conn
+    conn.commit()
+    conn.close()
 
 
-def test_get_all_books(create_connection):
-    books = get_all_books(create_connection)
+def test_get_all_books(db_name=DATABASE_NAME):
+    create_connection(db_name)
+    books = get_all_books(db_name)
     assert len(books) == 4
     assert books[3][2] == 'Michaił Bułhakow'

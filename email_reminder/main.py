@@ -94,7 +94,14 @@ while True:
 
         elif user_choice == '2':
             # ADD BOOK
-            add_book()
+            print('Enter book title')
+            title = input('>>> ')
+            print('Enter book author')
+            author = input('>>> ')
+            print('Enter release date  (YYYY-MM-DD  HH:MM:SS)')
+            release_date = input('>>> ')
+
+            add_book(title, author, release_date)
             get_all_books()
 
         elif user_choice == '3':
