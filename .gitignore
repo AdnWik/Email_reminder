@@ -6,3 +6,4 @@
 base.db
 /email_reminder/.env
 /.vscode
+/for_tests.db
