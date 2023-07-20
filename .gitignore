@@ -4,3 +4,6 @@
 /email_reminder/__pycache__
 */base.db
 base.db
+/email_reminder/.env
+/.vscode
+/for_tests.db
