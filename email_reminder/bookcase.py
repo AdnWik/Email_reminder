@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 from database import Database
 from send_email import EmailSender
 
+
 load_dotenv()
 DATABASE_NAME = getenv('DB_NAME')
-connection = sqlite3.connect(getenv('DB_NAME'),)
 
 
 def add_user(first_name,
