@@ -4,55 +4,50 @@ from datetime import datetime, timedelta
 from collections import namedtuple
 import logging
 from string import Template
+import sqlite3
 from os import getenv
 from dotenv import load_dotenv
-from database import get_data_from_database, insert_into_database
+from database import Database
 from send_email import EmailSender
 
+
 load_dotenv()
+DATABASE_NAME = getenv('DB_NAME')
 
 
-def add_user() -> None:
+def add_user(first_name,
+             last_name,
+             email_address,
+             db_name=DATABASE_NAME) -> None:
     """Add user to database
     """
-
-    print('Enter user first_name')
-    first_name = input('>>> ')
-    print('Enter user last_name')
-    last_name = input('>>> ')
-    print('Enter user email_address')
-    email_address = input('>>> ')
 
     query = ("""insert into users (first_name, last_name, email_address)
              values(?,?,?)""")
     data = [(first_name, last_name, email_address), ]
     try:
-        insert_into_database(query, data)
+        with Database(db_name) as database:
+            database.cursor.executemany(query, data)
     except ValueError:
         pass
 
 
-def add_book() -> None:
+def add_book(title, author, release_date, db_name=DATABASE_NAME) -> None:
     """Add book to database
     Date format YYYY-MM-DD HH:MM:SS
     """
 
-    print('Enter book title')
-    title = input('>>> ')
-    print('Enter book author')
-    author = input('>>> ')
-    print('Enter release date  (YYYY-MM-DD  HH:MM:SS)')
-    release_date = input('>>> ')
     query = ("""insert into books (title, author, created_at)
              values(?,?,?)""")
     data = [(title, author, release_date), ]
     try:
-        insert_into_database(query, data)
+        with Database(db_name) as database:
+            database.cursor.executemany(query, data)
     except ValueError:
         pass
 
 
-def get_all_books() -> list:
+def get_all_books(db_name=DATABASE_NAME) -> list:
     """Get all books from database
 
     Returns:
@@ -68,7 +63,9 @@ def get_all_books() -> list:
     query = "SELECT * FROM books"
 
     try:
-        data = get_data_from_database(query)
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
         if data:
             for book in map(book_tuple._make, data):
                 books.append(book)
@@ -79,7 +76,7 @@ def get_all_books() -> list:
         return None
 
 
-def get_all_users() -> list:
+def get_all_users(db_name=DATABASE_NAME) -> list:
     """Get all users from database
 
     Returns:
@@ -95,7 +92,9 @@ def get_all_users() -> list:
     query = "SELECT * FROM users"
 
     try:
-        data = get_data_from_database(query)
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
         if data:
             for user in map(user_tuple._make, data):
                 users.append(user)
@@ -106,7 +105,7 @@ def get_all_users() -> list:
         return None
 
 
-def get_all_rentals() -> list:
+def get_all_rentals(db_name=DATABASE_NAME) -> list:
     """Get all rentals from database
 
     Returns:
@@ -134,7 +133,9 @@ def get_all_rentals() -> list:
                 ON t1.book_id = t3.id"""
 
     try:
-        data = get_data_from_database(query)
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
         if data:
             for rental in map(rental_tuple._make, data):
                 rentals.append(rental)
@@ -149,7 +150,8 @@ def add_rental(user_id,
                book_id,
                rental_date=datetime.now(),
                days_of_rental=14,
-               returned=False) -> None:
+               returned=False,
+               db_name=DATABASE_NAME) -> None:
     """Add rental record to database
     """
 
@@ -170,7 +172,11 @@ def add_rental(user_id,
                                     returned)
                 values (?, ?, ?, ?, ?)"""
 
-    insert_into_database(query, data)
+    try:
+        with Database(db_name) as database:
+            database.cursor.executemany(query, data)
+    except sqlite3.OperationalError:
+        pass
 
 
 def new_rental() -> None:
@@ -207,7 +213,7 @@ def new_rental() -> None:
     print('Rental successful added')
 
 
-def check_returns() -> None:
+def check_returns(db_name=DATABASE_NAME) -> None:
     """Check returns in database for date 'now'
     """
 
@@ -236,7 +242,13 @@ def check_returns() -> None:
                 WHERE datetime(t1.return_date) < datetime('now')
                 AND t1.returned = 0"""
 
-    data = get_data_from_database(query)
+    try:
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
+    except sqlite3.OperationalError:
+        pass
+
     if not data:
         print('You have not delayed rentals')
     else:
@@ -256,7 +268,7 @@ def check_returns() -> None:
             send_email_reminder(delayed_rentals)
 
 
-def get_available_books() -> list:
+def get_available_books(db_name=DATABASE_NAME) -> list:
     """Get all not rented books from database
 
     Returns:
@@ -277,7 +289,12 @@ def get_available_books() -> list:
                 ON t1.id = t2.book_id
                 WHERE t2.returned = 0"""
     try:
-        data = get_data_from_database(query)
+        try:
+            with Database(db_name) as database:
+                database.cursor.execute(query)
+                data = database.cursor.fetchall()
+        except sqlite3.OperationalError:
+            data = None
         if data:
             for book in map(book_tuple._make, data):
                 available_books.append(book)
@@ -319,7 +336,7 @@ def show_all_rentals() -> None:
               f' {rental.returned:<2}')
 
 
-def delete_book() -> None:
+def delete_book(db_name=DATABASE_NAME) -> None:
     """Remove book from database
     """
 
@@ -344,14 +361,18 @@ def delete_book() -> None:
         user_choice = input('>>> ')
         if user_choice == 'Y':
             try:
-                insert_into_database(query, data)
-                print(f'Book "{book_to_delete.title} -'
-                      f' {book_to_delete.author}" has been deleted')
+                try:
+                    with Database(db_name) as database:
+                        database.cursor.executemany(query, data)
+                        print(f'Book "{book_to_delete.title} -'
+                              f' {book_to_delete.author}" has been deleted')
+                except sqlite3.OperationalError:
+                    pass
             except ValueError:
                 pass
 
 
-def delete_user() -> None:
+def delete_user(db_name=DATABASE_NAME) -> None:
     """Remove user from database if user returned all borrow books
     """
 
@@ -386,8 +407,19 @@ def delete_user() -> None:
 
     data = []
     users_available_to_del = []
-    users_with_rentals = get_data_from_database(query)
-    users_without_rentals = get_data_from_database(query_2)
+
+    try:
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            users_with_rentals = database.cursor.fetchall()
+
+        with Database(db_name) as database:
+            database.cursor.execute(query_2)
+            users_without_rentals = database.cursor.fetchall()
+
+    except sqlite3.OperationalError:
+        users_with_rentals = None
+        users_without_rentals = None
 
     if users_with_rentals:
         data.extend(users_with_rentals)
@@ -430,14 +462,18 @@ def delete_user() -> None:
                 WHERE user_id = ?"""
             data = [(str(selected_user.user_id)), ]
             try:
-                insert_into_database(query, data)
-                print(f'User "{selected_user.first_name}'
-                      f' {selected_user.last_name}" has been deleted')
+                try:
+                    with Database(db_name) as database:
+                        database.cursor.executemany(query, data)
+                        print(f'User "{selected_user.first_name}'
+                              f' {selected_user.last_name}" has been deleted')
+                except sqlite3.OperationalError:
+                    pass
             except ValueError as error:
                 print(str(error))
 
 
-def return_book() -> None:
+def return_book(db_name=DATABASE_NAME) -> None:
     """Return borrowed book
     """
 
@@ -464,7 +500,13 @@ def return_book() -> None:
                 ON t1.book_id = t3.id
                 WHERE t1.returned = 0"""
 
-    data = get_data_from_database(query)
+    try:
+        with Database(db_name) as database:
+            database.cursor.execute(query)
+            data = database.cursor.fetchall()
+    except sqlite3.OperationalError:
+        data = None
+
     if data:
         for rental in map(rental_tuple._make, data):
             rentals.append(rental)
@@ -483,8 +525,12 @@ def return_book() -> None:
             query = ("""UPDATE rentals SET returned = 1
                      WHERE rental_id = ?""")
             data = [(str(rentals[rental_idx].rental_id)), ]
-            insert_into_database(query, data)
-            print('Book: successful returned')
+            try:
+                with Database(db_name) as database:
+                    database.cursor.executemany(query, data)
+                    print('Book: successful returned')
+            except sqlite3.OperationalError:
+                pass
         except ValueError:
             pass
 
