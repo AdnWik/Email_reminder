@@ -1,10 +1,16 @@
 import sqlite3
-from bookcase import get_all_books, get_all_users, get_all_rentals, get_available_books
+from bookcase import (
+    get_all_books,
+    get_all_users,
+    get_all_rentals,
+    get_available_books
+    )
 
 DATABASE_NAME = 'for_tests.db'
 
 
 def create_connection(db_name):
+    """Create for_tests.db using in tests"""
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
     cur.execute("""DROP TABLE IF EXISTS books""")

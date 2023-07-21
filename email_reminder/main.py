@@ -1,18 +1,19 @@
 """Main - Email_Reminder"""
 import logging
-from bookcase import (show_all_books,
-                      show_all_rentals,
-                      show_all_users,
-                      add_book,
-                      add_user,
-                      get_all_books,
-                      get_all_users,
-                      delete_book,
-                      delete_user,
-                      new_rental,
-                      return_book,
-                      check_returns
-                      )
+from bookcase import (
+    show_all_books,
+    show_all_rentals,
+    show_all_users,
+    add_book,
+    add_user,
+    get_all_books,
+    get_all_users,
+    delete_book,
+    delete_user,
+    new_rental,
+    return_book,
+    check_returns
+    )
 
 # LOGGING CONFIG
 logging.basicConfig(level=logging.INFO)
